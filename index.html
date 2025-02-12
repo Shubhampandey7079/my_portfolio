@@ -6,6 +6,7 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+		
         <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
 
         <!--font-family-->
@@ -43,6 +44,17 @@
         
         <!--responsive.css-->
         <link rel="stylesheet" href="assets/css/responsive.css">
+
+		<style>
+			.success-message {
+				display: none; /* Hidden initially */
+				background-color: #d4edda;
+				color: #155724;
+				padding: 15px;
+				border-radius: 5px;
+				margin-bottom: 15px;
+			}
+		</style>
     
     </head>
 	
@@ -602,7 +614,11 @@
 						<div class="col-md-offset-1 col-md-5 col-sm-6">
 							<div class="single-contact-box">
 								<div class="contact-form">
-									<form action="https://formsubmit.co/shubhampandey707906@gmail.com" method="POST">
+									<!-- Success Message -->
+    								<div class="success-message" id="successMessage">
+        									Thank you! Your message has been sent successfully.
+    								</div>
+									<form id="contactForm" action="https://formsubmit.co/shubhampandey707906@gmail.com" method="POST">
 										<div class="row">
 											<div class="col-sm-6 col-xs-12">
 												<div class="form-group">
@@ -629,13 +645,13 @@
 												</div>
 											</div>
 										</div>
-										
+								
 										<!-- Optional: Disable CAPTCHA -->
 										<input type="hidden" name="_captcha" value="false">
-										
-										<!-- Optional: Redirect to Thank You Page -->
-										<input type="hidden" name="_next" value="https://shubhampandey7079.github.io/my_portfolio/">
-									
+								
+										<!-- Prevent Redirect and Show Message -->
+										<input type="hidden" name="_next" value="">
+								
 										<div class="row">
 											<div class="col-sm-12">
 												<div class="single-contact-btn">
@@ -709,6 +725,31 @@
 		<!--footer-copyright end-->
 		
 		<!-- Include all js compiled plugins (below), or include individual files as needed -->
+		<script>
+			document.getElementById('contactForm').addEventListener('submit', function(event) {
+				event.preventDefault();  // Stop default form submission
+				
+				// Send the form data using FormSubmit API
+				fetch(this.action, {
+					method: 'POST',
+					body: new FormData(this),
+				})
+				.then(response => {
+					if (response.ok) {
+						// Show success message
+						document.getElementById('successMessage').style.display = 'block';
+						
+						// Clear the form fields
+						document.getElementById('contactForm').reset();
+					} else {
+						alert('Oops! Something went wrong.');
+					}
+				})
+				.catch(error => {
+					alert('Error: ' + error.message);
+				});
+			});
+		</script>
 
 		<script src="assets/js/jquery.js"></script>
         
