@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shubham Pandey | Creative Developer</title>
     
-    <!-- Fonts: Plus Jakarta Sans (UI) & Space Grotesk (Headings) -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
     
-    <!-- Icons -->
+    <!-- Icon Library -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
@@ -18,18 +18,14 @@
            1. CORE VARIABLES & RESET
            ========================================= */
         :root {
-            --bg-dark: #030305;
-            --bg-card: rgba(255, 255, 255, 0.03);
-            --bg-card-hover: rgba(255, 255, 255, 0.06);
+            --bg-dark: #050505;
+            --bg-card: #0a0a0a;
             --text-main: #ffffff;
-            --text-muted: #94a3b8;
-            --accent: #6366f1;
-            --accent-glow: rgba(99, 102, 241, 0.15);
+            --text-muted: #888888;
+            --accent: #6366f1; /* Indigo */
+            --accent-glow: rgba(99, 102, 241, 0.4);
             --border: rgba(255, 255, 255, 0.08);
-            --border-highlight: rgba(255, 255, 255, 0.3);
             --cursor-size: 20px;
-            --font-ui: 'Plus Jakarta Sans', sans-serif;
-            --font-display: 'Space Grotesk', sans-serif;
         }
 
         *, *::before, *::after {
@@ -39,51 +35,48 @@
             cursor: none; /* Hide default cursor */
         }
 
-        html {
-            scroll-behavior: smooth;
-        }
-
         body {
-            font-family: var(--font-ui);
+            font-family: 'Outfit', sans-serif;
             background-color: var(--bg-dark);
             color: var(--text-main);
             overflow-x: hidden;
             width: 100%;
-            -webkit-font-smoothing: antialiased;
         }
 
-        /* Noise Overlay for Texture */
-        .noise-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)" opacity="0.05"/%3E%3C/svg%3E');
-            pointer-events: none;
-            z-index: 9000;
+        /* Hide scrollbar for cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
         }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
 
         /* =========================================
-           2. BACKGROUND & CANVAS
+           2. BACKGROUND & THREE.JS CANVAS
            ========================================= */
         #canvas-container {
             position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
             z-index: -1;
-            opacity: 0; /* Fade in handled by JS */
+            opacity: 0; /* Fade in on load */
             transition: opacity 1.5s ease;
         }
 
-        /* Vignette */
-        .vignette {
+        .bg-gradient-overlay {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at 50% 50%, transparent 0%, var(--bg-dark) 90%);
-            z-index: -1;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: radial-gradient(circle at 50% 50%, rgba(20, 20, 20, 0) 0%, var(--bg-dark) 100%);
+            z-index: -2;
             pointer-events: none;
         }
 
@@ -92,29 +85,33 @@
            ========================================= */
         .cursor-dot, .cursor-outline {
             position: fixed;
-            top: 0; left: 0;
+            top: 0;
+            left: 0;
             transform: translate(-50%, -50%);
             border-radius: 50%;
             z-index: 9999;
             pointer-events: none;
-            mix-blend-mode: difference;
         }
 
         .cursor-dot {
-            width: 6px; height: 6px;
+            width: 8px;
+            height: 8px;
             background-color: white;
         }
 
         .cursor-outline {
-            width: 40px; height: 40px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            transition: width 0.3s, height 0.3s, border-color 0.3s;
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
         }
 
+        /* Hover State for Cursor */
         body.hovering .cursor-outline {
-            width: 60px; height: 60px;
+            width: 60px;
+            height: 60px;
             background-color: rgba(255, 255, 255, 0.1);
-            border-color: white;
+            border-color: transparent;
             backdrop-filter: blur(2px);
         }
 
@@ -123,47 +120,53 @@
            ========================================= */
         nav {
             position: fixed;
-            top: 0; width: 100%;
-            padding: 25px 60px;
+            top: 0;
+            width: 100%;
+            padding: 30px 50px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             z-index: 100;
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255,255,255,0.02);
-            transition: padding 0.3s ease;
+            mix-blend-mode: difference;
         }
-
-        nav.scrolled { padding: 15px 60px; }
 
         .logo {
-            font-family: var(--font-display);
+            font-family: 'Space Grotesk', sans-serif;
             font-weight: 700;
-            font-size: 1.4rem;
+            font-size: 1.5rem;
+            letter-spacing: -1px;
             color: white;
             text-decoration: none;
-            letter-spacing: -0.03em;
         }
 
-        .nav-links { display: flex; gap: 40px; }
+        .nav-links {
+            display: flex;
+            gap: 40px;
+        }
 
         .nav-link {
             text-decoration: none;
-            color: var(--text-muted);
+            color: white;
             font-size: 0.9rem;
-            font-weight: 500;
-            transition: color 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             position: relative;
         }
 
-        .nav-link:hover { color: white; }
-        
         .nav-link::after {
-            content: ''; position: absolute; bottom: -4px; left: 0;
-            width: 0%; height: 1px; background: var(--accent);
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: white;
             transition: width 0.3s ease;
         }
-        .nav-link:hover::after { width: 100%; }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
 
         /* =========================================
            5. HERO SECTION
@@ -178,263 +181,366 @@
 
         .hero-content {
             z-index: 2;
-            max-width: 750px;
+            max-width: 600px;
         }
 
-        .badge {
-            display: inline-block;
-            padding: 8px 16px;
-            border: 1px solid var(--border);
-            border-radius: 100px;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-bottom: 30px;
-            background: rgba(255,255,255,0.02);
-            backdrop-filter: blur(5px);
+        .hero-subtitle {
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: var(--accent);
+            margin-bottom: 20px;
+            opacity: 0;
+            transform: translateY(20px);
         }
 
         .hero-title {
-            font-family: var(--font-display);
-            font-size: clamp(3rem, 7vw, 5.5rem);
-            line-height: 1.05;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(3rem, 8vw, 5.5rem);
+            line-height: 1;
             font-weight: 700;
             margin-bottom: 30px;
-            letter-spacing: -0.02em;
-            opacity: 0; /* JS Animation */
-            transform: translateY(30px);
-        }
-
-        .gradient-text {
-            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            opacity: 0;
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
         }
 
         .hero-desc {
-            font-size: 1.15rem;
+            font-size: 1.1rem;
             color: var(--text-muted);
-            line-height: 1.7;
+            line-height: 1.6;
             margin-bottom: 40px;
-            max-width: 500px;
+            max-width: 450px;
             opacity: 0;
-            transform: translateY(30px);
         }
 
-        /* Magnetic Button */
         .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 18px 40px;
+            display: inline-block;
+            padding: 15px 40px;
             background: white;
             color: black;
             text-decoration: none;
             font-weight: 600;
-            border-radius: 100px;
-            transition: transform 0.1s linear; /* Quick transition for magnetic feel */
+            border-radius: 50px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             opacity: 0;
-            transform: translateY(30px);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .btn span { position: relative; z-index: 2; }
-        
-        .btn::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--accent);
-            transform: translateY(100%);
-            transition: transform 0.4s cubic-bezier(0.65, 0, 0.35, 1);
-            z-index: 1;
         }
 
-        .btn:hover { color: white; }
-        .btn:hover::before { transform: translateY(0); }
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
 
         /* =========================================
-           6. SECTIONS GENERAL
+           6. SECTIONS (General)
            ========================================= */
-        section { padding: 120px 10%; position: relative; }
-
-        .section-header { margin-bottom: 70px; }
-        .section-eyebrow {
-            text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem;
-            color: var(--accent); margin-bottom: 15px; display: block; font-weight: 600;
+        section {
+            padding: 100px 10%;
+            position: relative;
         }
+
+        .section-header {
+            margin-bottom: 80px;
+        }
+
         .section-title {
-            font-family: var(--font-display);
-            font-size: 2.5rem; margin-bottom: 20px; letter-spacing: -0.02em;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .section-line {
+            width: 60px;
+            height: 4px;
+            background: var(--accent);
         }
 
         /* =========================================
-           7. SKILLS INFINITE MARQUEE
+           7. ABOUT SECTION
            ========================================= */
-        .marquee-container {
-            width: 100%;
-            overflow: hidden;
-            padding: 60px 0;
-            border-top: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
-            position: relative;
-        }
-
-        .marquee-content {
-            display: flex;
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 60px;
-            width: max-content;
-            animation: scroll 30s linear infinite;
+            align-items: center;
         }
 
-        .skill-item {
-            font-family: var(--font-display);
-            font-size: 4rem;
-            font-weight: 700;
-            color: rgba(255,255,255,0.1);
-            transition: color 0.3s;
-            -webkit-text-stroke: 1px rgba(255,255,255,0.1);
+        .about-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease-out;
+        }
+
+        .about-text p {
+            color: var(--text-muted);
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .highlight-text {
+            color: var(--text-main);
+            position: relative;
+            display: inline-block;
         }
         
-        .marquee-container:hover .skill-item { color: rgba(255,255,255,0.4); }
-        .marquee-container:hover .marquee-content { animation-play-state: paused; }
+        .highlight-text::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 0;
+            width: 0%;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.5s ease;
+        }
 
-        @keyframes scroll {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
+        .about-card:hover .highlight-text::after {
+            width: 100%;
         }
 
         /* =========================================
-           8. PROJECTS (Case Studies)
+           8. PROJECTS SECTION
            ========================================= */
         .projects-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
         }
 
-        /* Spotlight Card Effect */
         .project-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 40px;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            group: project;
+        }
+
+        .project-image {
+            height: 250px;
+            background-color: #1a1a1a;
             position: relative;
             overflow: hidden;
-            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-            display: flex;
-            flex-direction: column;
+        }
+        
+        .project-image img {
+            width: 100%;
             height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
         }
 
-        /* The radial gradient that follows mouse */
-        .project-card::before {
-            content: "";
-            position: absolute;
-            height: 100%; width: 100%;
-            top: 0; left: 0;
-            background: radial-gradient(
-                800px circle at var(--mouse-x) var(--mouse-y),
-                rgba(255, 255, 255, 0.06),
-                transparent 40%
-            );
-            z-index: 1;
-            opacity: 0;
-            transition: opacity 0.5s;
-            pointer-events: none;
-        }
-        
-        .project-card:hover::before { opacity: 1; }
-        .project-card:hover { border-color: var(--border-highlight); transform: translateY(-5px); }
-
-        .card-content { position: relative; z-index: 2; }
-
-        .project-tags { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .tag { font-size: 0.75rem; padding: 6px 14px; border-radius: 100px; background: rgba(255,255,255,0.05); color: var(--text-muted); }
-
-        .project-title { font-size: 1.8rem; margin-bottom: 15px; font-family: var(--font-display); }
-        
-        .project-case-study {
-            margin-top: 20px; padding-top: 20px;
-            border-top: 1px solid var(--border);
+        .project-card:hover .project-image img {
+            transform: scale(1.1);
         }
 
-        .case-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; }
-        .case-label { color: var(--text-muted); }
-        .case-val { text-align: right; color: white; max-width: 60%; }
-
-        /* =========================================
-           9. ABOUT / STORY
-           ========================================= */
-        .about-layout {
-            display: grid; grid-template-columns: 2fr 1fr; gap: 60px;
+        .project-info {
+            padding: 30px;
         }
 
-        .stat-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+        .project-title {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
         }
-        .stat-box {
-            border: 1px solid var(--border); padding: 20px; border-radius: 16px; text-align: center;
-            background: rgba(255,255,255,0.01);
-        }
-        .stat-num { display: block; font-size: 2rem; font-family: var(--font-display); font-weight: 700; color: white; }
-        .stat-label { font-size: 0.8rem; color: var(--text-muted); }
 
-        /* =========================================
-           10. CONTACT & FOOTER
-           ========================================= */
-        .contact-card {
-            background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+        .project-tags {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tag {
+            font-size: 0.75rem;
+            padding: 5px 12px;
             border: 1px solid var(--border);
-            border-radius: 30px;
-            padding: 80px;
-            text-align: center;
+            border-radius: 20px;
+            color: var(--text-muted);
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 50px;
+            max-width: 700px;
+            width: 90%;
+            border-radius: 20px;
+            position: relative;
+            transform: translateY(50px);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            transition: color 0.3s;
+        }
+        .close-modal:hover { color: white; }
+
+        /* =========================================
+           9. SKILLS SECTION
+           ========================================= */
+        .skills-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .skill-item {
+            padding: 15px 30px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .skill-item:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 15px var(--accent-glow);
+            transform: translateY(-5px);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        /* =========================================
+           10. AI CHAT SECTION
+           ========================================= */
+        .chat-section {
+            padding: 50px 10%;
+        }
+        
+        .chat-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            margin: 0 auto;
             position: relative;
             overflow: hidden;
         }
 
-        .big-email {
-            font-size: clamp(2rem, 5vw, 4rem);
-            font-family: var(--font-display);
-            font-weight: 700;
-            color: white;
-            text-decoration: none;
-            display: inline-block;
-            transition: color 0.3s;
-            position: relative; z-index: 2;
+        .chat-messages {
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding-right: 10px;
         }
-        .big-email:hover { color: var(--accent); }
 
-        footer {
-            padding: 40px 10%;
-            display: flex; justify-content: space-between; align-items: center;
-            border-top: 1px solid var(--border);
-            margin-top: 50px;
-            color: var(--text-muted); font-size: 0.9rem;
+        .message {
+            margin-bottom: 15px;
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            line-height: 1.4;
         }
-        .socials a { color: white; margin-left: 20px; transition: color 0.3s; }
-        .socials a:hover { color: var(--accent); }
+
+        .msg-bot {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-muted);
+            border-bottom-left-radius: 2px;
+        }
+
+        .msg-user {
+            background: var(--accent);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 2px;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 10px;
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .chat-send {
+            background: transparent;
+            border: none;
+            color: var(--accent);
+            font-size: 1.2rem;
+            transition: transform 0.2s;
+        }
+        .chat-send:hover { transform: scale(1.1); }
+
+        /* =========================================
+           11. FOOTER
+           ========================================= */
+        footer {
+            padding: 50px 10%;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .social-links a {
+            color: white;
+            margin-left: 20px;
+            font-size: 1.2rem;
+            transition: color 0.3s;
+        }
+
+        .social-links a:hover { color: var(--accent); }
 
         /* Responsive */
         @media (max-width: 768px) {
-            .hero { padding: 0 20px; align-items: center; text-align: center; }
-            .hero-content { margin: 0 auto; }
-            .hero-desc { margin: 0 auto 40px auto; }
-            .about-layout { grid-template-columns: 1fr; }
-            .nav-links { display: none; }
-            .cursor-dot, .cursor-outline { display: none; }
+            .hero { padding: 0 20px; }
+            .about-grid { grid-template-columns: 1fr; }
+            nav { padding: 20px; }
+            .nav-links { display: none; } /* Simplified for demo */
+            .cursor-dot, .cursor-outline { display: none; } /* Disable custom cursor on touch */
             *, *::before, *::after { cursor: auto; }
-            .project-card { padding: 25px; }
-            .section-title { font-size: 2rem; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Texture Overlays -->
-    <div class="noise-overlay"></div>
-    <div class="vignette"></div>
-
-    <!-- WebGL Canvas -->
+    <!-- Canvas for Three.js -->
     <div id="canvas-container"></div>
+    <div class="bg-gradient-overlay"></div>
 
     <!-- Custom Cursor -->
     <div class="cursor-dot" data-cursor-dot></div>
@@ -442,197 +548,166 @@
 
     <!-- Navigation -->
     <nav>
-        <a href="#" class="logo magnetic">SHUBHAM.</a>
+        <a href="#" class="logo">SHUBHAM.</a>
         <div class="nav-links">
-            <a href="#work" class="nav-link magnetic">Work</a>
-            <a href="#about" class="nav-link magnetic">About</a>
-            <a href="#contact" class="nav-link magnetic">Contact</a>
+            <a href="#about" class="nav-link">About</a>
+            <a href="#work" class="nav-link">Work</a>
+            <a href="#skills" class="nav-link">Skills</a>
+            <a href="#contact" class="nav-link">Contact</a>
         </div>
     </nav>
 
     <!-- Hero Section -->
-    <section class="hero">
+    <section class="hero" id="home">
         <div class="hero-content">
-            <div class="badge">Available for freelance</div>
-            <h1 class="hero-title">
-                Architecting <br>
-                <span class="gradient-text">Digital Realities</span>
-            </h1>
-            <p class="hero-desc">
-                I blend technical precision with creative motion to build immersive web experiences that leave a mark.
-            </p>
-            <a href="#work" class="btn magnetic">
-                <span>Explore Work</span>
-            </a>
-        </div>
-    </section>
-
-    <!-- Skills Marquee (Infinite Scroll) -->
-    <div class="marquee-container">
-        <div class="marquee-content">
-            <!-- Duplicated content for seamless loop -->
-            <span class="skill-item">JAVASCRIPT</span>
-            <span class="skill-item">REACT</span>
-            <span class="skill-item">THREE.JS</span>
-            <span class="skill-item">PYTHON</span>
-            <span class="skill-item">WEBGL</span>
-            <span class="skill-item">GSAP</span>
-            <span class="skill-item">NODE.JS</span>
-            <span class="skill-item">UI/UX</span>
-            <span class="skill-item">JAVASCRIPT</span>
-            <span class="skill-item">REACT</span>
-            <span class="skill-item">THREE.JS</span>
-            <span class="skill-item">PYTHON</span>
-            <span class="skill-item">WEBGL</span>
-        </div>
-    </div>
-
-    <!-- Work Section -->
-    <section id="work">
-        <div class="section-header">
-            <span class="section-eyebrow">Selected Work</span>
-            <h2 class="section-title">Case Studies</h2>
-        </div>
-        
-        <div class="projects-grid">
-            <!-- Project 1 -->
-            <div class="project-card magnetic interactive-hover">
-                <div class="card-content">
-                    <div class="project-tags">
-                        <span class="tag">Python</span>
-                        <span class="tag">AI</span>
-                        <span class="tag">Speech Rec</span>
-                    </div>
-                    <h3 class="project-title">V-Pad</h3>
-                    <p style="color:var(--text-muted); line-height:1.6;">A voice-controlled text editor revolutionizing accessibility for hands-free document creation.</p>
-                    
-                    <div class="project-case-study">
-                        <div class="case-row">
-                            <span class="case-label">Problem</span>
-                            <span class="case-val">Inefficiency in traditional typing workflows.</span>
-                        </div>
-                        <div class="case-row">
-                            <span class="case-label">Solution</span>
-                            <span class="case-val">Real-time Speech-to-text conversion engine.</span>
-                        </div>
-                        <div class="case-row">
-                            <span class="case-label">Impact</span>
-                            <span class="case-val" style="color:var(--accent)">200% faster input speed.</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Project 2 -->
-            <div class="project-card magnetic interactive-hover">
-                <div class="card-content">
-                    <div class="project-tags">
-                        <span class="tag">API</span>
-                        <span class="tag">React</span>
-                        <span class="tag">UX</span>
-                    </div>
-                    <h3 class="project-title">WeatherAI</h3>
-                    <p style="color:var(--text-muted); line-height:1.6;">Hyper-local weather forecasting with dynamic data visualization and atmospheric mapping.</p>
-                    
-                    <div class="project-case-study">
-                        <div class="case-row">
-                            <span class="case-label">Problem</span>
-                            <span class="case-val">Generic weather apps lack specific micro-climate data.</span>
-                        </div>
-                        <div class="case-row">
-                            <span class="case-label">Solution</span>
-                            <span class="case-val">Custom API integration with graphical heatmaps.</span>
-                        </div>
-                        <div class="case-row">
-                            <span class="case-label">Impact</span>
-                            <span class="case-val" style="color:var(--accent)">Used by 500+ daily active users.</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Project 3 -->
-            <div class="project-card magnetic interactive-hover">
-                <div class="card-content">
-                    <div class="project-tags">
-                        <span class="tag">OOPs</span>
-                        <span class="tag">Algo</span>
-                        <span class="tag">Desktop</span>
-                    </div>
-                    <h3 class="project-title">Routine Manager</h3>
-                    <p style="color:var(--text-muted); line-height:1.6;">Advanced scheduling system optimizing daily productivity through algorithmic task prioritization.</p>
-                    
-                    <div class="project-case-study">
-                        <div class="case-row">
-                            <span class="case-label">Problem</span>
-                            <span class="case-val">Disorganized schedules leading to low productivity.</span>
-                        </div>
-                        <div class="case-row">
-                            <span class="case-label">Solution</span>
-                            <span class="case-val">Automated CSV integration & task sorting.</span>
-                        </div>
-                        <div class="case-row">
-                            <span class="case-label">Impact</span>
-                            <span class="case-val" style="color:var(--accent)">Streamlined workflow management.</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <p class="hero-subtitle">Portfolio 2024</p>
+            <h1 class="hero-title">Digital<br>Experience<br>Designer.</h1>
+            <p class="hero-desc">I build immersive web applications and 3D experiences that blend technology with art.</p>
+            <a href="#work" class="btn interactive-hover">View Projects</a>
         </div>
     </section>
 
     <!-- About Section -->
     <section id="about">
-        <div class="about-layout">
-            <div>
-                <span class="section-eyebrow">Biography</span>
-                <h2 class="section-title">Engineering Emotion into Code</h2>
-                <p style="color:var(--text-muted); line-height:1.8; margin-bottom:20px; font-size:1.1rem;">
-                    I'm a creative developer based in Bihar, India. I bridge the gap between design and engineering. My background in Data Science gives me a logical edge, while my passion for UI/UX ensures every pixel serves a purpose.
-                </p>
-                <p style="color:var(--text-muted); line-height:1.8; font-size:1.1rem;">
-                    I don't just build websites; I build digital environments that tell stories, engage users, and drive results.
-                </p>
+        <div class="section-header">
+            <h2 class="section-title">About Me</h2>
+            <div class="section-line"></div>
+        </div>
+        <div class="about-grid">
+            <div class="about-text">
+                <p>I am a creative developer based in Bihar, India. I specialize in JavaScript ecosystems, focusing on <span class="highlight-text">React, Three.js, and Node.js</span>.</p>
+                <p>My philosophy is simple: functionality meets aesthetics. I don't just write code; I craft digital experiences that leave a lasting impression.</p>
+                <p>With a background in Data Science (Python/SQL), I bring a unique analytical perspective to front-end development, ensuring performance and data integrity.</p>
             </div>
-            <div class="stat-grid">
-                <div class="stat-box">
-                    <span class="stat-num">3+</span>
-                    <span class="stat-label">Years Exp.</span>
+            <div class="about-card js-tilt">
+                <h3 style="margin-bottom: 20px;">Current Status</h3>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
+                    <span style="color: var(--text-muted);">Location</span>
+                    <span>Dehri On Sone, Bihar</span>
                 </div>
-                <div class="stat-box">
-                    <span class="stat-num">20+</span>
-                    <span class="stat-label">Projects</span>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
+                    <span style="color: var(--text-muted);">Education</span>
+                    <span>BCA Pursuing</span>
                 </div>
-                <div class="stat-box">
-                    <span class="stat-num">100%</span>
-                    <span class="stat-label">Commitment</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-num">24/7</span>
-                    <span class="stat-label">Learner</span>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-muted);">Availability</span>
+                    <span style="color: var(--accent);">Open for work</span>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Contact Section -->
+    <!-- Projects Section -->
+    <section id="work">
+        <div class="section-header">
+            <h2 class="section-title">Selected Work</h2>
+            <div class="section-line"></div>
+        </div>
+        <div class="projects-grid">
+            <!-- Project 1 -->
+            <div class="project-card interactive-hover" data-title="V-Pad" data-desc="A voice-controlled text editor using Python and Speech Recognition. Features text-to-speech conversion and hands-free editing capabilities." data-tags="Python, Tkinter, AI">
+                <div class="project-image">
+                    <img src="https://picsum.photos/seed/vpad/600/400" alt="V-Pad">
+                </div>
+                <div class="project-info">
+                    <h3 class="project-title">V-Pad</h3>
+                    <div class="project-tags">
+                        <span class="tag">Python</span>
+                        <span class="tag">AI</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Project 2 -->
+            <div class="project-card interactive-hover" data-title="WeatherAI" data-desc="Real-time weather forecasting application utilizing the OpenWeatherMap API with dynamic UI updates and graphical representations." data-tags="API, UI/UX, Python">
+                <div class="project-image">
+                    <img src="https://picsum.photos/seed/weather/600/400" alt="Weather App">
+                </div>
+                <div class="project-info">
+                    <h3 class="project-title">WeatherAI</h3>
+                    <div class="project-tags">
+                        <span class="tag">API</span>
+                        <span class="tag">UI/UX</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project 3 -->
+            <div class="project-card interactive-hover" data-title="Routine Manager" data-desc="Desktop application for managing daily schedules efficiently with CSV integration and error handling." data-tags="Python, OOPs">
+                <div class="project-image">
+                    <img src="https://picsum.photos/seed/routine/600/400" alt="Routine Manager">
+                </div>
+                <div class="project-info">
+                    <h3 class="project-title">Routine Manager</h3>
+                    <div class="project-tags">
+                        <span class="tag">Python</span>
+                        <span class="tag">OOPs</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Section -->
+    <section id="skills">
+        <div class="section-header">
+            <h2 class="section-title">Technical Arsenal</h2>
+            <div class="section-line"></div>
+        </div>
+        <div class="skills-container">
+            <div class="skill-item interactive-hover">JavaScript (ES6+)</div>
+            <div class="skill-item interactive-hover">Python</div>
+            <div class="skill-item interactive-hover">Three.js</div>
+            <div class="skill-item interactive-hover">GSAP</div>
+            <div class="skill-item interactive-hover">React.js</div>
+            <div class="skill-item interactive-hover">Node.js</div>
+            <div class="skill-item interactive-hover">SQL & NoSQL</div>
+            <div class="skill-item interactive-hover">Data Science</div>
+            <div class="skill-item interactive-hover">Git & GitHub</div>
+            <div class="skill-item interactive-hover">UI/UX Design</div>
+        </div>
+    </section>
+
+    <!-- AI Chat Section -->
     <section id="contact">
-        <div class="contact-card">
-            <h2 class="section-title">Ready to Collaborate?</h2>
-            <p style="color:var(--text-muted); margin-bottom:40px;">Have a project in mind? Let's build something extraordinary.</p>
-            <a href="mailto:shubhampandey707906@gmail.com" class="big-email magnetic">Start a Conversation</a>
+        <div class="section-header">
+            <h2 class="section-title">AI Assistant</h2>
+            <div class="section-line"></div>
+        </div>
+        <div class="chat-section">
+            <div class="chat-box">
+                <div class="chat-messages" id="chat-messages">
+                    <div class="message msg-bot">Hello! I am Shubham's AI Assistant. Ask me anything about his skills, projects, or contact info.</div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" class="chat-input" placeholder="Type your question..." id="chat-input">
+                    <button class="chat-send interactive-hover"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
         </div>
     </section>
 
     <!-- Footer -->
     <footer>
-        <p>&copy; 2024 Shubham Pandey. All Rights Reserved.</p>
-        <div class="socials">
-            <a href="#" class="magnetic"><i class="fab fa-github"></i></a>
-            <a href="#" class="magnetic"><i class="fab fa-linkedin"></i></a>
-            <a href="#" class="magnetic"><i class="fab fa-instagram"></i></a>
+        <p>&copy; 2024 Shubham Pandey. Crafted with Code.</p>
+        <div class="social-links">
+            <a href="#" class="interactive-hover"><i class="fab fa-github"></i></a>
+            <a href="#" class="interactive-hover"><i class="fab fa-linkedin"></i></a>
+            <a href="#" class="interactive-hover"><i class="fab fa-instagram"></i></a>
+            <a href="#" class="interactive-hover"><i class="fas fa-envelope"></i></a>
         </div>
     </footer>
+
+    <!-- Project Modal -->
+    <div class="modal" id="project-modal">
+        <div class="modal-content">
+            <span class="close-modal interactive-hover">&times;</span>
+            <h2 id="modal-title" style="font-family: 'Space Grotesk'; margin-bottom: 10px;">Project Title</h2>
+            <div id="modal-tags" style="margin-bottom: 20px; color: var(--accent);"></div>
+            <p id="modal-desc" style="line-height: 1.6; color: var(--text-muted);">Description goes here...</p>
+            <button class="btn interactive-hover" style="margin-top: 30px; font-size: 0.9rem; padding: 10px 25px;">View Code</button>
+        </div>
+    </div>
 
     <!-- SCRIPTS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -640,212 +715,106 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 
     <script>
-        // =========================================
-        // 1. CORE INITIALIZATION
-        // =========================================
+        // 1. INITIALIZATION & SETUP
         gsap.registerPlugin(ScrollTrigger);
         
-        // Fade in Canvas
+        // Fade in Canvas on load
         window.addEventListener('load', () => {
             document.getElementById('canvas-container').style.opacity = '1';
-            initHeroAnimations();
         });
 
-        // =========================================
-        // 2. CUSTOM CURSOR & MAGNETIC EFFECT
-        // =========================================
-        const cursorDot = document.querySelector('[data-cursor-dot]');
-        const cursorOutline = document.querySelector('[data-cursor-outline]');
-        const magnets = document.querySelectorAll('.magnetic');
-
-        // Smooth Follow
-        window.addEventListener('mousemove', (e) => {
-            const posX = e.clientX;
-            const posY = e.clientY;
-
-            // Dot instant
-            cursorDot.style.left = `${posX}px`;
-            cursorDot.style.top = `${posY}px`;
-
-            // Outline lag
-            cursorOutline.animate({
-                left: `${posX}px`, top: `${posY}px`
-            }, { duration: 500, fill: "forwards" });
-
-            // Spotlight effect update for cards
-            document.querySelectorAll('.project-card').forEach(card => {
-                const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                card.style.setProperty("--mouse-x", `${x}px`);
-                card.style.setProperty("--mouse-y", `${y}px`);
-            });
-        });
-
-        // Magnetic Buttons Logic
-        magnets.forEach(btn => {
-            btn.addEventListener('mousemove', (e) => {
-                document.body.classList.add('hovering');
-                const position = btn.getBoundingClientRect();
-                const x = e.clientX - position.left - position.width / 2;
-                const y = e.clientY - position.top - position.height / 2;
-                
-                // Magnetic strength
-                gsap.to(btn, { x: x * 0.3, y: y * 0.3, duration: 0.3, ease: "power2.out" });
-            });
-
-            btn.addEventListener('mouseleave', () => {
-                document.body.classList.remove('hovering');
-                gsap.to(btn, { x: 0, y: 0, duration: 0.5, ease: "elastic.out(1, 0.3)" });
-            });
-        });
-
-        // =========================================
-        // 3. THREE.JS LIQUID METAL SHADER
-        // =========================================
+        // 2. THREE.JS BACKGROUND SCENE
         const initThreeJS = () => {
             const container = document.getElementById('canvas-container');
             const scene = new THREE.Scene();
             
+            // Camera
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.z = 3; // Move closer
+            camera.position.z = 5;
 
+            // Renderer
             const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             container.appendChild(renderer.domElement);
 
-            // Vertex Shader: Standard with varying normals
-            const vertexShader = `
-                varying vec2 vUv;
-                varying vec3 vNormal;
-                void main() {
-                    vUv = uv;
-                    vNormal = normal;
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                }
-            `;
-
-            // Fragment Shader: Noise-based Liquid Chrome effect
-            const fragmentShader = `
-                uniform float uTime;
-                varying vec2 vUv;
-                varying vec3 vNormal;
-
-                // Simplex Noise Function (Simplified)
-                vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-                vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-                vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
-                vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
-                float snoise(vec3 v) {
-                    const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
-                    const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
-                    vec3 i  = floor(v + dot(v, C.yyy) );
-                    vec3 x0 = v - i + dot(i, C.xxx) ;
-                    vec3 g = step(x0.yzx, x0.xyz);
-                    vec3 l = 1.0 - g;
-                    vec3 i1 = min( g.xyz, l.zxy );
-                    vec3 i2 = max( g.xyz, l.zxy );
-                    vec3 x1 = x0 - i1 + C.xxx;
-                    vec3 x2 = x0 - i2 + C.yyy;
-                    vec3 x3 = x0 - D.yyy;
-                    i = mod289(i);
-                    vec4 p = permute( permute( permute(
-                                i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
-                            + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))
-                            + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
-                    float n_ = 0.142857142857;
-                    vec3  ns = n_ * D.wyz - D.xzx;
-                    vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
-                    vec4 x_ = floor(j * ns.z);
-                    vec4 y_ = floor(j - 7.0 * x_ );
-                    vec4 x = x_ *ns.x + ns.yyyy;
-                    vec4 y = y_ *ns.x + ns.yyyy;
-                    vec4 h = 1.0 - abs(x) - abs(y);
-                    vec4 b0 = vec4( x.xy, y.xy );
-                    vec4 b1 = vec4( x.zw, y.zw );
-                    vec4 s0 = floor(b0)*2.0 + 1.0;
-                    vec4 s1 = floor(b1)*2.0 + 1.0;
-                    vec4 sh = -step(h, vec4(0.0));
-                    vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
-                    vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
-                    vec3 p0 = vec3(a0.xy,h.x);
-                    vec3 p1 = vec3(a0.zw,h.y);
-                    vec3 p2 = vec3(a1.xy,h.z);
-                    vec3 p3 = vec3(a1.zw,h.w);
-                    vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
-                    p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
-                    vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
-                    m = m * m;
-                    return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3) ) );
-                }
-
-                void main() {
-                    // Noise movement
-                    float noise = snoise(vec3(vNormal * 2.0 + uTime * 0.2));
-                    
-                    // Colors: Deep Purple to Bright Indigo
-                    vec3 color1 = vec3(0.1, 0.05, 0.2);
-                    vec3 color2 = vec3(0.3, 0.4, 0.9);
-                    
-                    vec3 finalColor = mix(color1, color2, noise + 0.5);
-                    
-                    // Add "rim light" feel based on normals
-                    float fresnel = pow(1.0 + dot(vNormal, vec3(0.0, 0.0, 1.0)), 3.0);
-                    finalColor += vec3(0.5, 0.5, 0.8) * fresnel * 0.5;
-
-                    gl_FragColor = vec4(finalColor, 1.0);
-                }
-            `;
-
-            // Geometry - Large Sphere
-            const geometry = new THREE.SphereGeometry(2, 64, 64);
+            // Object (Abstract Geometric Shape)
+            const geometry = new THREE.IcosahedronGeometry(2, 1); // Radius 2, Detail 1
             
-            const material = new THREE.ShaderMaterial({
-                vertexShader,
-                fragmentShader,
-                uniforms: {
-                    uTime: { value: 0 }
-                },
-                wireframe: false
+            // Wireframe Material (Cyberpunk look)
+            const material = new THREE.MeshBasicMaterial({ 
+                color: 0x6366f1, 
+                wireframe: true,
+                transparent: true,
+                opacity: 0.15
             });
 
             const mesh = new THREE.Mesh(geometry, material);
             scene.add(mesh);
 
-            // Particles (Subtle Dust)
-            const particlesGeom = new THREE.BufferGeometry();
-            const particlesCount = 300; // Reduced count for performance
+            // Particles inside/around the object
+            const particlesGeometry = new THREE.BufferGeometry();
+            const particlesCount = 200;
             const posArray = new Float32Array(particlesCount * 3);
+            
             for(let i = 0; i < particlesCount * 3; i++) {
-                posArray[i] = (Math.random() - 0.5) * 12;
+                posArray[i] = (Math.random() - 0.5) * 10; // Spread particles
             }
-            particlesGeom.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-            const particlesMat = new THREE.PointsMaterial({
-                size: 0.015, color: 0x6366f1, transparent: true, opacity: 0.4
+            
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            const particlesMaterial = new THREE.PointsMaterial({
+                size: 0.02,
+                color: 0xffffff
             });
-            const particlesMesh = new THREE.Points(particlesGeom, particlesMat);
+            const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
             scene.add(particlesMesh);
 
-            // Animation Loop
+            // Mouse Interaction Variables
+            let mouseX = 0;
+            let mouseY = 0;
+            let targetX = 0;
+            let targetY = 0;
+
+            const windowHalfX = window.innerWidth / 2;
+            const windowHalfY = window.innerHeight / 2;
+
+            document.addEventListener('mousemove', (event) => {
+                mouseX = (event.clientX - windowHalfX);
+                mouseY = (event.clientY - windowHalfY);
+            });
+
+            // Clock for animation
             const clock = new THREE.Clock();
-            
+
+            // Animation Loop
             const animate = () => {
                 requestAnimationFrame(animate);
                 const elapsedTime = clock.getElapsedTime();
 
-                material.uniforms.uTime.value = elapsedTime;
+                targetX = mouseX * 0.001;
+                targetY = mouseY * 0.001;
 
-                // Gentle Rotation
-                mesh.rotation.y = elapsedTime * 0.05;
-                particlesMesh.rotation.y = elapsedTime * 0.02;
+                // Smooth rotation based on mouse
+                mesh.rotation.y += 0.5 * (targetX - mesh.rotation.y);
+                mesh.rotation.x += 0.5 * (targetY - mesh.rotation.x);
+                
+                // Constant ambient rotation
+                mesh.rotation.z += 0.002;
+
+                // Pulsing effect
+                const scale = 1 + Math.sin(elapsedTime) * 0.05;
+                mesh.scale.set(scale, scale, scale);
+
+                // Move particles slightly
+                particlesMesh.rotation.y = -mouseX * 0.0002;
+                particlesMesh.rotation.x = -mouseY * 0.0002;
 
                 renderer.render(scene, camera);
             };
 
             animate();
 
-            // Resize
+            // Resize Handler
             window.addEventListener('resize', () => {
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
@@ -855,54 +824,140 @@
 
         initThreeJS();
 
-        // =========================================
-        // 4. GSAP ANIMATIONS & SCROLL
-        // =========================================
-        const initHeroAnimations = () => {
-            const tl = gsap.timeline();
-            
-            tl.to('.hero-title', { opacity: 1, y: 0, duration: 1, ease: "power3.out" })
-              .to('.hero-desc', { opacity: 1, y: 0, duration: 1 }, "-=0.6")
-              .to('.btn', { opacity: 1, y: 0, duration: 0.8 }, "-=0.8")
-              .from('.badge', { scale: 0.8, opacity: 0, duration: 0.8 }, "-=1");
-        };
+        // 3. CUSTOM CURSOR LOGIC
+        const cursorDot = document.querySelector('[data-cursor-dot]');
+        const cursorOutline = document.querySelector('[data-cursor-outline]');
 
-        // Navbar Scroll Effect
-        window.addEventListener('scroll', () => {
-            const nav = document.querySelector('nav');
-            if(window.scrollY > 50) nav.classList.add('scrolled');
-            else nav.classList.remove('scrolled');
+        window.addEventListener('mousemove', (e) => {
+            const posX = e.clientX;
+            const posY = e.clientY;
+
+            // Dot moves instantly
+            cursorDot.style.left = `${posX}px`;
+            cursorDot.style.top = `${posY}px`;
+
+            // Outline moves with lag (animation)
+            cursorOutline.animate({
+                left: `${posX}px`,
+                top: `${posY}px`
+            }, { duration: 500, fill: "forwards" });
         });
 
-        // Section Reveals
+        // Hover Effects for Cursor
+        const interactiveElements = document.querySelectorAll('.interactive-hover, a, button, input, .project-card');
+        interactiveElements.forEach(el => {
+            el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+            el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+        });
+
+        // 4. GSAP ANIMATIONS
+        // Hero Animation
+        const tl = gsap.timeline();
+        tl.to('.hero-subtitle', { opacity: 1, y: 0, duration: 1, delay: 0.5 })
+          .to('.hero-title', { opacity: 1, clipPath: "polygon(0 0, 100% 0, 100% 100%, 0% 100%)", duration: 1, ease: "power4.out" })
+          .to('.hero-desc', { opacity: 1, duration: 1 }, "-=0.5")
+          .to('.btn', { opacity: 1, duration: 0.5 }, "-=0.5");
+
+        // Scroll Animations for Sections
         gsap.utils.toArray('section').forEach(section => {
-            if(section.classList.contains('hero')) return;
+            if(section.id === 'home') return; // Skip hero
             
             gsap.from(section.children, {
                 scrollTrigger: {
                     trigger: section,
-                    start: "top 85%",
+                    start: "top 80%",
                     toggleActions: "play none none reverse"
                 },
-                y: 40,
+                y: 50,
                 opacity: 0,
                 duration: 1,
-                stagger: 0.15,
+                stagger: 0.2,
                 ease: "power3.out"
             });
         });
 
-        // Project Cards Stagger
-        gsap.from(".project-card", {
+        // Parallax Effect for About Card
+        gsap.to(".about-card", {
             scrollTrigger: {
-                trigger: ".projects-grid",
-                start: "top 80%"
+                trigger: ".about-card",
+                start: "top bottom",
+                end: "bottom top",
+                scrub: 1
             },
-            y: 50,
-            opacity: 0,
-            duration: 0.8,
-            stagger: 0.2,
-            ease: "power2.out"
+            y: -50,
+            rotation: 2
+        });
+
+        // 5. PROJECT MODAL LOGIC
+        const modal = document.getElementById('project-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalDesc = document.getElementById('modal-desc');
+        const modalTags = document.getElementById('modal-tags');
+        const closeBtn = document.querySelector('.close-modal');
+
+        document.querySelectorAll('.project-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const title = card.getAttribute('data-title');
+                const desc = card.getAttribute('data-desc');
+                const tags = card.getAttribute('data-tags');
+
+                modalTitle.textContent = title;
+                modalDesc.textContent = desc;
+                modalTags.textContent = tags;
+                
+                modal.classList.add('active');
+            });
+        });
+
+        const closeModal = () => modal.classList.remove('active');
+        closeBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        // 6. AI CHAT MOCK LOGIC
+        const chatInput = document.getElementById('chat-input');
+        const chatMessages = document.getElementById('chat-messages');
+        const sendBtn = document.querySelector('.chat-send');
+
+        const botResponses = {
+            "skills": "Shubham is proficient in Python, JavaScript, SQL, and frameworks like React and Node.js.",
+            "contact": "You can reach Shubham at shubhampandey707906@gmail.com or via the social links below.",
+            "projects": "His notable projects include V-Pad (Voice Editor), WeatherAI, and a Daily Routine Manager.",
+            "default": "I can tell you about Shubham's skills, projects, or contact info. Try asking 'What are his skills?'"
+        };
+
+        function addMessage(text, sender) {
+            const div = document.createElement('div');
+            div.classList.add('message', sender === 'user' ? 'msg-user' : 'msg-bot');
+            div.textContent = text;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function handleChat() {
+            const text = chatInput.value.trim();
+            if (!text) return;
+
+            addMessage(text, 'user');
+            chatInput.value = '';
+
+            // Simulate typing delay
+            setTimeout(() => {
+                let response = botResponses["default"];
+                const lowerText = text.toLowerCase();
+
+                if (lowerText.includes('skill') || lowerText.includes('tech')) response = botResponses["skills"];
+                else if (lowerText.includes('contact') || lowerText.includes('email') || lowerText.includes('call')) response = botResponses["contact"];
+                else if (lowerText.includes('project') || lowerText.includes('work')) response = botResponses["projects"];
+
+                addMessage(response, 'bot');
+            }, 600);
+        }
+
+        sendBtn.addEventListener('click', handleChat);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleChat();
         });
 
     </script>
