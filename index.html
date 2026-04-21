@@ -1,615 +1,580 @@
 <!DOCTYPE html>
-<html class="no-js" lang="en">
-
+<html lang="en">
 <head>
-    <!-- meta data -->
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <!-- title of site -->
-    <title>Shubham Pandey | 3D Portfolio</title>
-
-    <!-- Google Fonts: Poppins -->
-    <link href="https://fonts.googleapis.com/css?family=Poppins:100,200,300,400,500,600,700,800,900&subset=devanagari,latin-ext" rel="stylesheet">
-
-    <!-- Font Awesome -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shubham Pandey | Creative Developer</title>
+    
+    <!-- Fonts: Plus Jakarta Sans (UI) & Space Grotesk (Headings) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-
     <style>
-        /* 
-         * ==========================================
-         * CORE 3D ANIMATION & THEME STYLES
-         * ==========================================
-         */
+        /* =========================================
+           1. CORE VARIABLES & RESET
+           ========================================= */
         :root {
-            --bg-dark: #0f172a;
-            --bg-darker: #020617;
-            --primary-accent: #38bdf8; /* Sky Blue */
-            --secondary-accent: #818cf8; /* Indigo */
-            --glass-bg: rgba(30, 41, 59, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --text-main: #f8fafc;
+            --bg-dark: #030305;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-card-hover: rgba(255, 255, 255, 0.06);
+            --text-main: #ffffff;
             --text-muted: #94a3b8;
-            --card-hover-transform: translateY(-10px) rotateX(5deg) rotateY(5deg);
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.15);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-highlight: rgba(255, 255, 255, 0.3);
+            --cursor-size: 20px;
+            --font-ui: 'Plus Jakarta Sans', sans-serif;
+            --font-display: 'Space Grotesk', sans-serif;
         }
 
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            overflow-x: hidden;
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none; /* Hide default cursor */
+        }
+
+        html {
             scroll-behavior: smooth;
         }
 
-        /* Animated Background Gradient */
-        body::before {
-            content: '';
+        body {
+            font-family: var(--font-ui);
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow-x: hidden;
+            width: 100%;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Noise Overlay for Texture */
+        .noise-overlay {
             position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(56, 189, 248, 0.1) 0%, rgba(2, 6, 23, 0) 50%);
-            animation: bgSpin 20s linear infinite;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)" opacity="0.05"/%3E%3C/svg%3E');
+            pointer-events: none;
+            z-index: 9000;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+        /* =========================================
+           2. BACKGROUND & CANVAS
+           ========================================= */
+        #canvas-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: -1;
+            opacity: 0; /* Fade in handled by JS */
+            transition: opacity 1.5s ease;
+        }
+
+        /* Vignette */
+        .vignette {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 50%, transparent 0%, var(--bg-dark) 90%);
             z-index: -1;
             pointer-events: none;
         }
 
-        @keyframes bgSpin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 10px;
-        }
-        ::-webkit-scrollbar-track {
-            background: var(--bg-darker);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--primary-accent);
-            border-radius: 5px;
-        }
-
-        /* 
-         * ==========================================
-         * NAVIGATION (Glassmorphism)
-         * ==========================================
-         */
-        .navbar {
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--glass-border);
-            padding: 15px 0;
-            transition: all 0.4s ease;
-        }
-
-        .navbar-brand {
-            color: var(--primary-accent) !important;
-            font-weight: 700;
-            font-size: 24px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .navbar-nav li a {
-            color: var(--text-main) !important;
-            font-weight: 500;
-            font-size: 16px;
-            transition: color 0.3s ease;
-            position: relative;
-        }
-
-        .navbar-nav li a::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: 0;
-            left: 0;
-            background: linear-gradient(90deg, var(--primary-accent), var(--secondary-accent));
-            transition: width 0.3s ease;
-        }
-
-        .navbar-nav li a:hover::after {
-            width: 100%;
-        }
-
-        .navbar-toggle {
-            border: none;
-            background: transparent;
-        }
-        .navbar-toggle .icon-bar {
-            background-color: var(--text-main);
-        }
-
-        /* 
-         * ==========================================
-         * HERO SECTION (3D Floating Elements)
-         * ==========================================
-         */
-        .welcome-hero {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            perspective: 1000px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero-text-container {
-            transform-style: preserve-3d;
-            animation: floatHero 6s ease-in-out infinite;
-        }
-
-        @keyframes floatHero {
-            0%, 100% { transform: translateY(0) rotateX(0deg); }
-            50% { transform: translateY(-20px) rotateX(2deg); }
-        }
-
-        .welcome-hero h2 {
-            font-size: 4rem;
-            font-weight: 800;
-            line-height: 1.2;
-            background: linear-gradient(135deg, #fff 0%, var(--primary-accent) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            margin-bottom: 20px;
-        }
-
-        .welcome-hero p {
-            font-size: 1.5rem;
-            color: var(--primary-accent);
-            letter-spacing: 3px;
-            font-weight: 300;
-            margin-bottom: 40px;
-        }
-
-        .btn-3d {
-            display: inline-block;
-            padding: 15px 40px;
-            background: linear-gradient(45deg, var(--primary-accent), var(--secondary-accent));
-            color: #fff;
-            font-weight: 600;
-            text-transform: uppercase;
-            border-radius: 50px;
-            text-decoration: none;
-            box-shadow: 0 10px 25px rgba(56, 189, 248, 0.4);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-3d:hover {
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 15px 35px rgba(56, 189, 248, 0.6);
-        }
-
-        /* 
-         * ==========================================
-         * SECTIONS COMMON
-         * ==========================================
-         */
-        section {
-            padding: 100px 0;
-            position: relative;
-        }
-
-        .section-heading h2 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 50px;
-            position: relative;
-            display: inline-block;
-        }
-
-        .section-heading h2::after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80px;
-            height: 4px;
-            background: var(--primary-accent);
-            border-radius: 2px;
-        }
-
-        /* 
-         * ==========================================
-         * CARDS (3D TILT EFFECT)
-         * ==========================================
-         */
-        .card-3d-wrap {
-            margin-bottom: 30px;
-            perspective: 1000px;
-            cursor: pointer;
-        }
-
-        .card-3d-wrapper {
-            transition: transform 0.5s;
-            transform-style: preserve-3d;
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        /* Glow effect on hover */
-        .card-3d-wrapper::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            border-radius: 20px;
-            background: radial-gradient(circle at center, rgba(56, 189, 248, 0.15), transparent 70%);
-            opacity: 0;
-            transition: opacity 0.5s;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .card-3d-wrap:hover .card-3d-wrapper::before {
-            opacity: 1;
-        }
-
-        .card-3d-content {
-            position: relative;
-            z-index: 2;
-            transform: translateZ(20px); /* Pushes content forward in 3D space */
-        }
-
-        /* 
-         * ==========================================
-         * SPECIFIC SECTIONS
-         * ==========================================
-         */
-
-        /* About Image */
-        .about-img-wrapper {
-            position: relative;
-            border-radius: 20px;
-            overflow: hidden;
-            border: 2px solid var(--glass-border);
-            transform: rotateY(-10deg) rotateX(5deg);
-            box-shadow: 20px 20px 60px rgba(0,0,0,0.5);
-            transition: transform 0.5s ease;
-        }
-        
-        .about-img-wrapper:hover {
-            transform: rotateY(0) rotateX(0);
-        }
-
-        .about-img-wrapper img {
-            width: 100%;
-            display: block;
-        }
-
-        /* Skills */
-        .progress {
-            background-color: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            height: 12px;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
-        }
-
-        .progress-bar {
-            background: linear-gradient(90deg, var(--primary-accent), var(--secondary-accent));
-            border-radius: 10px;
-            transition: width 1.5s ease-in-out;
-            box-shadow: 0 0 10px var(--primary-accent);
-            width: 0; /* Animate to width via JS */
-        }
-        
-        .single-skill-content {
-            margin-bottom: 30px;
-        }
-        
-        .barWrapper h3 {
-            float: right;
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--primary-accent);
-        }
-        
-        .progressText {
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-muted);
-        }
-
-        /* Education Timeline */
-        .education .single-horizontal-timeline {
-            position: relative;
-            z-index: 1;
-        }
-        
-        .timeline-horizontal-border {
-            border-top: 2px dashed var(--glass-border);
-            position: relative;
-            margin-top: 15px;
-        }
-
-        .timeline-horizontal-border i {
-            background: var(--bg-dark);
-            color: var(--primary-accent);
-            border: 2px solid var(--primary-accent);
+        /* =========================================
+           3. CUSTOM CURSOR
+           ========================================= */
+        .cursor-dot, .cursor-outline {
+            position: fixed;
+            top: 0; left: 0;
+            transform: translate(-50%, -50%);
             border-radius: 50%;
-            padding: 5px;
-            font-size: 12px;
-            position: absolute;
-            top: -10px;
-            left: 0;
+            z-index: 9999;
+            pointer-events: none;
+            mix-blend-mode: difference;
         }
 
-        .experience-time h2, .experience-time h3 {
-            color: var(--text-main);
+        .cursor-dot {
+            width: 6px; height: 6px;
+            background-color: white;
         }
-        
-        .timeline-content p {
+
+        .cursor-outline {
+            width: 40px; height: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: width 0.3s, height 0.3s, border-color 0.3s;
+        }
+
+        body.hovering .cursor-outline {
+            width: 60px; height: 60px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: white;
+            backdrop-filter: blur(2px);
+        }
+
+        /* =========================================
+           4. NAVIGATION
+           ========================================= */
+        nav {
+            position: fixed;
+            top: 0; width: 100%;
+            padding: 25px 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            transition: padding 0.3s ease;
+        }
+
+        nav.scrolled { padding: 15px 60px; }
+
+        .logo {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.4rem;
+            color: white;
+            text-decoration: none;
+            letter-spacing: -0.03em;
+        }
+
+        .nav-links { display: flex; gap: 40px; }
+
+        .nav-link {
+            text-decoration: none;
             color: var(--text-muted);
             font-size: 0.9rem;
-        }
-
-        /* Experience / Projects */
-        .experience {
-            background: rgba(0,0,0,0.2);
-        }
-
-        .single-timeline-box {
-            background: var(--glass-bg);
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 40px;
-            border: 1px solid var(--glass-border);
-            transition: all 0.3s;
-        }
-
-        .single-timeline-box:hover {
-            transform: scale(1.02);
-            border-color: var(--primary-accent);
-        }
-
-        .timeline-content h4.title {
-            color: var(--primary-accent);
-            font-weight: 700;
-        }
-        
-        .timeline-content a {
-            color: var(--secondary-accent);
-            text-decoration: none;
-            font-weight: 600;
-        }
-        
-        .timeline-content a:hover {
-            text-decoration: underline;
-        }
-
-        /* Portfolio / Certificates */
-        .item {
+            font-weight: 500;
+            transition: color 0.3s;
             position: relative;
-            border-radius: 15px;
-            overflow: hidden;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-            transform-style: preserve-3d;
-            transition: transform 0.5s;
         }
 
-        .item:hover {
-            transform: translateZ(20px) rotateY(-5deg);
+        .nav-link:hover { color: white; }
+        
+        .nav-link::after {
+            content: ''; position: absolute; bottom: -4px; left: 0;
+            width: 0%; height: 1px; background: var(--accent);
+            transition: width 0.3s ease;
         }
+        .nav-link:hover::after { width: 100%; }
 
-        .item img {
-            width: 100%;
-            height: 250px;
-            object-fit: cover;
-            transition: transform 0.5s;
-        }
-
-        .item:hover img {
-            transform: scale(1.1);
-        }
-
-        .isotope-overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(15, 23, 42, 0.85);
+        /* =========================================
+           5. HERO SECTION
+           ========================================= */
+        .hero {
+            height: 100vh;
             display: flex;
             align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s;
+            padding: 0 10%;
+            position: relative;
+        }
+
+        .hero-content {
+            z-index: 2;
+            max-width: 750px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            background: rgba(255,255,255,0.02);
             backdrop-filter: blur(5px);
         }
 
-        .item:hover .isotope-overlay {
-            opacity: 1;
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 7vw, 5.5rem);
+            line-height: 1.05;
+            font-weight: 700;
+            margin-bottom: 30px;
+            letter-spacing: -0.02em;
+            opacity: 0; /* JS Animation */
+            transform: translateY(30px);
         }
 
-        .isotope-overlay a {
-            background: var(--primary-accent);
-            color: #fff;
-            padding: 10px 20px;
-            border-radius: 30px;
+        .gradient-text {
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-desc {
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 40px;
+            max-width: 500px;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        /* Magnetic Button */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px 40px;
+            background: white;
+            color: black;
             text-decoration: none;
             font-weight: 600;
-            transform: translateY(20px);
-            transition: transform 0.3s;
-        }
-
-        .item:hover .isotope-overlay a {
-            transform: translateY(0);
-        }
-
-        /* Contact */
-        .contact-form input, .contact-form textarea {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--glass-border);
-            color: #fff;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            border-radius: 100px;
+            transition: transform 0.1s linear; /* Quick transition for magnetic feel */
+            opacity: 0;
+            transform: translateY(30px);
+            position: relative;
+            overflow: hidden;
         }
         
-        .contact-form input:focus, .contact-form textarea:focus {
-            background: rgba(255,255,255,0.1);
-            border-color: var(--primary-accent);
-            box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
-            outline: none;
+        .btn span { position: relative; z-index: 2; }
+        
+        .btn::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--accent);
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.65, 0, 0.35, 1);
+            z-index: 1;
         }
 
-        .contact-btn {
-            background: linear-gradient(90deg, var(--primary-accent), var(--secondary-accent));
-            border: none;
-            padding: 15px 40px;
-            color: white;
-            border-radius: 50px;
-            font-weight: 600;
-            text-transform: uppercase;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            transition: all 0.3s;
+        .btn:hover { color: white; }
+        .btn:hover::before { transform: translateY(0); }
+
+        /* =========================================
+           6. SECTIONS GENERAL
+           ========================================= */
+        section { padding: 120px 10%; position: relative; }
+
+        .section-header { margin-bottom: 70px; }
+        .section-eyebrow {
+            text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem;
+            color: var(--accent); margin-bottom: 15px; display: block; font-weight: 600;
+        }
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 2.5rem; margin-bottom: 20px; letter-spacing: -0.02em;
+        }
+
+        /* =========================================
+           7. SKILLS INFINITE MARQUEE
+           ========================================= */
+        .marquee-container {
+            width: 100%;
+            overflow: hidden;
+            padding: 60px 0;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+
+        .marquee-content {
+            display: flex;
+            gap: 60px;
+            width: max-content;
+            animation: scroll 30s linear infinite;
+        }
+
+        .skill-item {
+            font-family: var(--font-display);
+            font-size: 4rem;
+            font-weight: 700;
+            color: rgba(255,255,255,0.1);
+            transition: color 0.3s;
+            -webkit-text-stroke: 1px rgba(255,255,255,0.1);
         }
         
-        .contact-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(56, 189, 248, 0.4);
+        .marquee-container:hover .skill-item { color: rgba(255,255,255,0.4); }
+        .marquee-container:hover .marquee-content { animation-play-state: paused; }
+
+        @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
         }
 
-        .contact-adress {
-            padding: 30px;
-            background: var(--glass-bg);
-            border-radius: 20px;
-            border: 1px solid var(--glass-border);
+        /* =========================================
+           8. PROJECTS (Case Studies)
+           ========================================= */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+        }
+
+        /* Spotlight Card Effect */
+        .project-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            display: flex;
+            flex-direction: column;
             height: 100%;
         }
 
-        .hm-foot-icon ul li {
-            display: inline-block;
-            margin-right: 15px;
-        }
-
-        .hm-foot-icon ul li a {
-            color: var(--text-main);
-            font-size: 1.5rem;
-            transition: color 0.3s;
-        }
-
-        .hm-foot-icon ul li a:hover {
-            color: var(--primary-accent);
-        }
-        
-        .single-contact-add-info {
-            margin-bottom: 20px;
-        }
-        
-        .single-contact-add-info h3 {
-            color: var(--primary-accent);
-            font-size: 16px;
-            text-transform: uppercase;
-            margin-bottom: 5px;
-        }
-
-        /* Footer */
-        .footer-copyright {
-            background: var(--bg-darker);
-            padding: 20px 0;
-            border-top: 1px solid var(--glass-border);
-        }
-
-        .return-to-top {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 50px;
-            height: 50px;
-            background: var(--primary-accent);
-            color: white;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 50px;
-            cursor: pointer;
+        /* The radial gradient that follows mouse */
+        .project-card::before {
+            content: "";
+            position: absolute;
+            height: 100%; width: 100%;
+            top: 0; left: 0;
+            background: radial-gradient(
+                800px circle at var(--mouse-x) var(--mouse-y),
+                rgba(255, 255, 255, 0.06),
+                transparent 40%
+            );
+            z-index: 1;
             opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            z-index: 999;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+        
+        .project-card:hover::before { opacity: 1; }
+        .project-card:hover { border-color: var(--border-highlight); transform: translateY(-5px); }
+
+        .card-content { position: relative; z-index: 2; }
+
+        .project-tags { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tag { font-size: 0.75rem; padding: 6px 14px; border-radius: 100px; background: rgba(255,255,255,0.05); color: var(--text-muted); }
+
+        .project-title { font-size: 1.8rem; margin-bottom: 15px; font-family: var(--font-display); }
+        
+        .project-case-study {
+            margin-top: 20px; padding-top: 20px;
+            border-top: 1px solid var(--border);
         }
 
-        .return-to-top:hover {
-            transform: translateY(-5px);
-            background: var(--secondary-accent);
+        .case-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; }
+        .case-label { color: var(--text-muted); }
+        .case-val { text-align: right; color: white; max-width: 60%; }
+
+        /* =========================================
+           9. ABOUT / STORY
+           ========================================= */
+        .about-layout {
+            display: grid; grid-template-columns: 2fr 1fr; gap: 60px;
         }
 
-        /* Success Message */
-        .success-message {
-            display: none;
-            background-color: rgba(40, 167, 69, 0.2);
-            color: #4cd964;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            border: 1px solid #4cd964;
-            backdrop-filter: blur(5px);
+        .stat-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
         }
+        .stat-box {
+            border: 1px solid var(--border); padding: 20px; border-radius: 16px; text-align: center;
+            background: rgba(255,255,255,0.01);
+        }
+        .stat-num { display: block; font-size: 2rem; font-family: var(--font-display); font-weight: 700; color: white; }
+        .stat-label { font-size: 0.8rem; color: var(--text-muted); }
+
+        /* =========================================
+           10. CONTACT & FOOTER
+           ========================================= */
+        .contact-card {
+            background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            padding: 80px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .big-email {
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-family: var(--font-display);
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+            transition: color 0.3s;
+            position: relative; z-index: 2;
+        }
+        .big-email:hover { color: var(--accent); }
+
+        footer {
+            padding: 40px 10%;
+            display: flex; justify-content: space-between; align-items: center;
+            border-top: 1px solid var(--border);
+            margin-top: 50px;
+            color: var(--text-muted); font-size: 0.9rem;
+        }
+        .socials a { color: white; margin-left: 20px; transition: color 0.3s; }
+        .socials a:hover { color: var(--accent); }
 
         /* Responsive */
         @media (max-width: 768px) {
-            .welcome-hero h2 { font-size: 2.5rem; }
-            .navbar-collapse { background: var(--bg-darker); }
+            .hero { padding: 0 20px; align-items: center; text-align: center; }
+            .hero-content { margin: 0 auto; }
+            .hero-desc { margin: 0 auto 40px auto; }
+            .about-layout { grid-template-columns: 1fr; }
+            .nav-links { display: none; }
+            .cursor-dot, .cursor-outline { display: none; }
+            *, *::before, *::after { cursor: auto; }
+            .project-card { padding: 25px; }
+            .section-title { font-size: 2rem; }
         }
     </style>
 </head>
-
 <body>
 
-    <!-- Navigation -->
-    <header class="top-area">
-        <div class="header-area">
-            <nav class="navbar navbar-default bootsnav navbar-fixed-top no-background">
-                <div class="container">
-                    <div class="navbar-header">
-                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-menu">
-                            <i class="fa fa-bars"></i>
-                        </button>
-                        <a class="navbar-brand" href="#">SHUBHAM PANDEY</a>
-                    </div>
+    <!-- Texture Overlays -->
+    <div class="noise-overlay"></div>
+    <div class="vignette"></div>
 
-                    <div class="collapse navbar-collapse menu-ui-design" id="navbar-menu">
-                        <ul class="nav navbar-nav navbar-right">
-                            <li class="smooth-menu active"><a href="#welcome-hero">Home</a></li>
-                            <li class="smooth-menu"><a href="#about">About</a></li>
-                            <li class="smooth-menu"><a href="#education">Education</a></li>
-                            <li class="smooth-menu"><a href="#skills">Skills</a></li>
-                            <li class="smooth-menu"><a href="#experience">Projects</a></li>
-                            <li class="smooth-menu"><a href="#portfolio">Certificates</a></li>
-                            <li class="smooth-menu"><a href="#contact">Contact</a></li>
-                        </ul>
+    <!-- WebGL Canvas -->
+    <div id="canvas-container"></div>
+
+    <!-- Custom Cursor -->
+    <div class="cursor-dot" data-cursor-dot></div>
+    <div class="cursor-outline" data-cursor-outline></div>
+
+    <!-- Navigation -->
+    <nav>
+        <a href="#" class="logo magnetic">SHUBHAM.</a>
+        <div class="nav-links">
+            <a href="#work" class="nav-link magnetic">Work</a>
+            <a href="#about" class="nav-link magnetic">About</a>
+            <a href="#contact" class="nav-link magnetic">Contact</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="badge">Available for freelance</div>
+            <h1 class="hero-title">
+                Architecting <br>
+                <span class="gradient-text">Digital Realities</span>
+            </h1>
+            <p class="hero-desc">
+                I blend technical precision with creative motion to build immersive web experiences that leave a mark.
+            </p>
+            <a href="#work" class="btn magnetic">
+                <span>Explore Work</span>
+            </a>
+        </div>
+    </section>
+
+    <!-- Skills Marquee (Infinite Scroll) -->
+    <div class="marquee-container">
+        <div class="marquee-content">
+            <!-- Duplicated content for seamless loop -->
+            <span class="skill-item">JAVASCRIPT</span>
+            <span class="skill-item">REACT</span>
+            <span class="skill-item">THREE.JS</span>
+            <span class="skill-item">PYTHON</span>
+            <span class="skill-item">WEBGL</span>
+            <span class="skill-item">GSAP</span>
+            <span class="skill-item">NODE.JS</span>
+            <span class="skill-item">UI/UX</span>
+            <span class="skill-item">JAVASCRIPT</span>
+            <span class="skill-item">REACT</span>
+            <span class="skill-item">THREE.JS</span>
+            <span class="skill-item">PYTHON</span>
+            <span class="skill-item">WEBGL</span>
+        </div>
+    </div>
+
+    <!-- Work Section -->
+    <section id="work">
+        <div class="section-header">
+            <span class="section-eyebrow">Selected Work</span>
+            <h2 class="section-title">Case Studies</h2>
+        </div>
+        
+        <div class="projects-grid">
+            <!-- Project 1 -->
+            <div class="project-card magnetic interactive-hover">
+                <div class="card-content">
+                    <div class="project-tags">
+                        <span class="tag">Python</span>
+                        <span class="tag">AI</span>
+                        <span class="tag">Speech Rec</span>
+                    </div>
+                    <h3 class="project-title">V-Pad</h3>
+                    <p style="color:var(--text-muted); line-height:1.6;">A voice-controlled text editor revolutionizing accessibility for hands-free document creation.</p>
+                    
+                    <div class="project-case-study">
+                        <div class="case-row">
+                            <span class="case-label">Problem</span>
+                            <span class="case-val">Inefficiency in traditional typing workflows.</span>
+                        </div>
+                        <div class="case-row">
+                            <span class="case-label">Solution</span>
+                            <span class="case-val">Real-time Speech-to-text conversion engine.</span>
+                        </div>
+                        <div class="case-row">
+                            <span class="case-label">Impact</span>
+                            <span class="case-val" style="color:var(--accent)">200% faster input speed.</span>
+                        </div>
                     </div>
                 </div>
-            </nav>
-        </div>
-    </header>
+            </div>
 
-    <!-- Welcome Hero -->
-    <section id="welcome-hero" class="welcome-hero">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-12 text-center">
-                    <div class="hero-text-container">
-                        <h2>Hi <span>,</span> I am <br> Shubham <br> Pandey <span>.</span></h2>
-                        <p>Python | SQL | Data Scientist</p>
-                        <a href="assets\download\Resume.pdf" download class="btn-3d">Download Resume</a>
+            <!-- Project 2 -->
+            <div class="project-card magnetic interactive-hover">
+                <div class="card-content">
+                    <div class="project-tags">
+                        <span class="tag">API</span>
+                        <span class="tag">React</span>
+                        <span class="tag">UX</span>
+                    </div>
+                    <h3 class="project-title">WeatherAI</h3>
+                    <p style="color:var(--text-muted); line-height:1.6;">Hyper-local weather forecasting with dynamic data visualization and atmospheric mapping.</p>
+                    
+                    <div class="project-case-study">
+                        <div class="case-row">
+                            <span class="case-label">Problem</span>
+                            <span class="case-val">Generic weather apps lack specific micro-climate data.</span>
+                        </div>
+                        <div class="case-row">
+                            <span class="case-label">Solution</span>
+                            <span class="case-val">Custom API integration with graphical heatmaps.</span>
+                        </div>
+                        <div class="case-row">
+                            <span class="case-label">Impact</span>
+                            <span class="case-val" style="color:var(--accent)">Used by 500+ daily active users.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project 3 -->
+            <div class="project-card magnetic interactive-hover">
+                <div class="card-content">
+                    <div class="project-tags">
+                        <span class="tag">OOPs</span>
+                        <span class="tag">Algo</span>
+                        <span class="tag">Desktop</span>
+                    </div>
+                    <h3 class="project-title">Routine Manager</h3>
+                    <p style="color:var(--text-muted); line-height:1.6;">Advanced scheduling system optimizing daily productivity through algorithmic task prioritization.</p>
+                    
+                    <div class="project-case-study">
+                        <div class="case-row">
+                            <span class="case-label">Problem</span>
+                            <span class="case-val">Disorganized schedules leading to low productivity.</span>
+                        </div>
+                        <div class="case-row">
+                            <span class="case-label">Solution</span>
+                            <span class="case-val">Automated CSV integration & task sorting.</span>
+                        </div>
+                        <div class="case-row">
+                            <span class="case-label">Impact</span>
+                            <span class="case-val" style="color:var(--accent)">Streamlined workflow management.</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -617,650 +582,329 @@
     </section>
 
     <!-- About Section -->
-    <section id="about" class="about">
-        <div class="section-heading text-center">
-            <h2>About Me</h2>
-        </div>
-        <div class="container">
-            <div class="about-content">
-                <div class="row">
-                    <div class="col-sm-7">
-                        <div class="card-3d-wrap">
-                            <div class="card-3d-wrapper">
-                                <div class="card-3d-content">
-                                    <h3 style="margin-top:0;">Who am I?</h3>
-                                    <p style="color: var(--text-muted); line-height: 1.6;">
-                                        I'm Shubham Pandey, a passionate tech enthusiast from Dehri on Sone, Rohtas, Bihar. Currently pursuing my BCA from Veer Kunwar Singh University with a solid 70.6% score.
-                                        <br><br>
-                                        With strong expertise in Python, SQL, C, and basic HTML, I'm driven by a love for problem-solving and innovation. I've built exciting projects like a Flappy Bird game using Kivy and a Weather App with Tkinter, blending creativity with technical skills.
-                                        <br><br>
-                                        Certified in Python by Kaggle, I'm continuously honing my skills in Data Science while exploring AI-driven solutions like automating WhatsApp messaging and TensorFlow Lite model inference.
-                                    </p>
-                                    <div class="row" style="margin-top: 20px;">
-                                        <div class="col-sm-4">
-                                            <div class="single-about-add-info">
-                                                <h3>Phone</h3>
-                                                <p style="color: #fff;">9304099065</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-4">
-                                            <div class="single-about-add-info">
-                                                <h3>Email</h3>
-                                                <a href="mailto:shubhampandey707906@gmail.com" style="color:#fff; word-break: break-all;">
-                                                    shubhampandey707906@gmail.com
-                                                </a>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-4">
-                                            <div class="single-about-add-info">
-                                                <h3>Website</h3>
-                                                <a href="https://shubhampandey7079.github.io/my_portfolio/" style="color:#fff;">SPANDEY.com</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-5">
-                        <div class="about-img-wrapper">
-                            <!-- Using a placeholder as original local path won't load in preview -->
-                            <img src="https://picsum.photos/seed/shubham/400/500" alt="Shubham Pandey">
-                            <div class="about-list-icon" style="position:absolute; bottom:20px; left:0; width:100%; text-align:center;">
-                                <ul style="list-style:none; padding:0;">
-                                    <li style="display:inline-block; margin:0 10px;">
-                                        <a href="https://www.facebook.com/shubhampandey007/" style="color:#fff; font-size:1.5rem;"><i class="fa fa-facebook"></i></a>
-                                    </li>
-                                    <li style="display:inline-block; margin:0 10px;">
-                                        <a href="https://github.com/Shubhampandey7079" style="color:#fff; font-size:1.5rem;"><i class="fa fa-github"></i></a>
-                                    </li>
-                                    <li style="display:inline-block; margin:0 10px;">
-                                        <a href="https://x.com/Pandey07Shubham" style="color:#fff; font-size:1.5rem;"><i class="fa fa-twitter"></i></a>
-                                    </li>
-                                    <li style="display:inline-block; margin:0 10px;">
-                                        <a href="https://www.linkedin.com/in/shubham-pandey-846a05246/" style="color:#fff; font-size:1.5rem;"><i class="fa fa-linkedin"></i></a>
-                                    </li>
-                                    <li style="display:inline-block; margin:0 10px;">
-                                        <a href="https://www.instagram.com/shubham_pandey07/" style="color:#fff; font-size:1.5rem;"><i class="fa fa-instagram"></i></a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <section id="about">
+        <div class="about-layout">
+            <div>
+                <span class="section-eyebrow">Biography</span>
+                <h2 class="section-title">Engineering Emotion into Code</h2>
+                <p style="color:var(--text-muted); line-height:1.8; margin-bottom:20px; font-size:1.1rem;">
+                    I'm a creative developer based in Bihar, India. I bridge the gap between design and engineering. My background in Data Science gives me a logical edge, while my passion for UI/UX ensures every pixel serves a purpose.
+                </p>
+                <p style="color:var(--text-muted); line-height:1.8; font-size:1.1rem;">
+                    I don't just build websites; I build digital environments that tell stories, engage users, and drive results.
+                </p>
             </div>
-        </div>
-    </section>
-
-    <!-- Education Section -->
-    <section id="education" class="education">
-        <div class="section-heading text-center">
-            <h2>Education</h2>
-        </div>
-        <div class="container">
-            <div class="education-horizontal-timeline">
-                <div class="row">
-                    <!-- 10th -->
-                    <div class="col-sm-4">
-                        <div class="card-3d-wrap">
-                            <div class="card-3d-wrapper">
-                                <div class="card-3d-content">
-                                    <div class="experience-time">
-                                        <h2 style="color: var(--primary-accent);">2018-19</h2>
-                                        <h3 style="font-size: 1.2rem; font-weight: 600;">10th Grade</h3>
-                                    </div>
-                                    <div class="timeline-horizontal-border">
-                                        <i class="fa fa-circle"></i>
-                                    </div>
-                                    <div class="timeline">
-                                        <div class="timeline-content">
-                                            <h4 class="title">CBSE Board</h4>
-                                            <h5 style="color: var(--text-muted);">Sun Beam Public School</h5>
-                                            <p class="description">
-                                                <b>Percentage:</b> 65.80%<br>
-                                                Completed Secondary School Examination with focus on Science and Maths.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- 12th -->
-                    <div class="col-sm-4">
-                        <div class="card-3d-wrap">
-                            <div class="card-3d-wrapper">
-                                <div class="card-3d-content">
-                                    <div class="experience-time">
-                                        <h2 style="color: var(--primary-accent);">2019-21</h2>
-                                        <h3 style="font-size: 1.2rem; font-weight: 600;">12th Grade</h3>
-                                    </div>
-                                    <div class="timeline-horizontal-border">
-                                        <i class="fa fa-circle"></i>
-                                    </div>
-                                    <div class="timeline">
-                                        <div class="timeline-content">
-                                            <h4 class="title">BSEB Board</h4>
-                                            <h5 style="color: var(--text-muted);">J.L.N College, Dehri</h5>
-                                            <p class="description">
-                                                <b>Stream:</b> Science<br>
-                                                <b>Percentage:</b> 67.60%<br>
-                                                Studied Physics, Chemistry, Mathematics, English, and Hindi.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- BCA -->
-                    <div class="col-sm-4">
-                        <div class="card-3d-wrap">
-                            <div class="card-3d-wrapper">
-                                <div class="card-3d-content">
-                                    <div class="experience-time">
-                                        <h2 style="color: var(--primary-accent);">2021-24</h2>
-                                        <h3 style="font-size: 1.2rem; font-weight: 600;">BCA</h3>
-                                    </div>
-                                    <div class="timeline-horizontal-border">
-                                        <i class="fa fa-circle"></i>
-                                    </div>
-                                    <div class="timeline">
-                                        <div class="timeline-content">
-                                            <h4 class="title">Veer Kunwar Singh University</h4>
-                                            <h5 style="color: var(--text-muted);">Arrah, Bihar</h5>
-                                            <p class="description">
-                                                <b>Percentage:</b> Pursuing<br>
-                                                Key Subjects: Data Structures, DBMS, Web Development, Python, C.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <div class="stat-grid">
+                <div class="stat-box">
+                    <span class="stat-num">3+</span>
+                    <span class="stat-label">Years Exp.</span>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Skills Section -->
-    <section id="skills" class="skills">
-        <div class="section-heading text-center">
-            <h2>My Skills</h2>
-        </div>
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="single-skill-content">
-                        <div class="barWrapper">
-                            <span class="progressText">Python</span>
-                            <div class="single-progress-txt">
-                                <div class="progress">
-                                    <div class="progress-bar" role="progressbar" data-width="98%"></div>
-                                </div>
-                                <h3>98%</h3>
-                            </div>
-                        </div>
-                        <div class="barWrapper">
-                            <span class="progressText">SQL</span>
-                            <div class="single-progress-txt">
-                                <div class="progress">
-                                    <div class="progress-bar" role="progressbar" data-width="97%"></div>
-                                </div>
-                                <h3>97%</h3>
-                            </div>
-                        </div>
-                        <div class="barWrapper">
-                            <span class="progressText">Data Science</span>
-                            <div class="single-progress-txt">
-                                <div class="progress">
-                                    <div class="progress-bar" role="progressbar" data-width="90%"></div>
-                                </div>
-                                <h3>90%</h3>
-                            </div>
-                        </div>
-                        <div class="barWrapper">
-                            <span class="progressText">C Language</span>
-                            <div class="single-progress-txt">
-                                <div class="progress">
-                                    <div class="progress-bar" role="progressbar" data-width="90%"></div>
-                                </div>
-                                <h3>90%</h3>
-                            </div>
-                        </div>
-                    </div>
+                <div class="stat-box">
+                    <span class="stat-num">20+</span>
+                    <span class="stat-label">Projects</span>
                 </div>
-                <div class="col-md-6">
-                    <div class="single-skill-content">
-                        <div class="barWrapper">
-                            <span class="progressText">HTML 5</span>
-                            <div class="single-progress-txt">
-                                <div class="progress">
-                                    <div class="progress-bar" role="progressbar" data-width="90%"></div>
-                                </div>
-                                <h3>90%</h3>
-                            </div>
-                        </div>
-                        <div class="barWrapper">
-                            <span class="progressText">Problem Solving</span>
-                            <div class="single-progress-txt">
-                                <div class="progress">
-                                    <div class="progress-bar" role="progressbar" data-width="85%"></div>
-                                </div>
-                                <h3>85%</h3>
-                            </div>
-                        </div>
-                        <div class="barWrapper">
-                            <span class="progressText">Communication</span>
-                            <div class="single-progress-txt">
-                                <div class="progress">
-                                    <div class="progress-bar" role="progressbar" data-width="97%"></div>
-                                </div>
-                                <h3>97%</h3>
-                            </div>
-                        </div>
-                        <div class="barWrapper">
-                            <span class="progressText">Git & GitHub</span>
-                            <div class="single-progress-txt">
-                                <div class="progress">
-                                    <div class="progress-bar" role="progressbar" data-width="90%"></div>
-                                </div>
-                                <h3>90%</h3>
-                            </div>
-                        </div>
-                    </div>
+                <div class="stat-box">
+                    <span class="stat-num">100%</span>
+                    <span class="stat-label">Commitment</span>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Experience / Projects -->
-    <section id="experience" class="experience">
-        <div class="section-heading text-center">
-            <h2>Projects</h2>
-        </div>
-        <div class="container">
-            <div class="experience-content">
-                <div class="main-timeline">
-                    <div class="row">
-                        <!-- Project 1 -->
-                        <div class="col-md-offset-2 col-md-8">
-                            <div class="single-timeline-box fix">
-                                <div class="row">
-                                    <div class="col-md-5">
-                                        <div class="experience-time text-right">
-                                            <h2>Daily Routine Manager</h2>
-                                            <h3 style="color: var(--secondary-accent); font-size: 1rem; margin-top: 5px;">
-                                                Python, Tkinter, CSV
-                                            </h3>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-offset-2 col-md-5">
-                                        <div class="timeline">
-                                            <div class="timeline-content">
-                                                <h4 class="title">
-                                                    <span><i class="fa fa-circle" style="font-size: 10px; color: var(--primary-accent);"></i></span>
-                                                    Description:
-                                                </h4>
-                                                <br>
-                                                <a href="https://github.com/Shubhampandey7079/routine_maker" target="_blank"><i class="fa fa-github"></i> View on GitHub</a>
-                                                <p class="description" style="margin-top: 10px;">
-                                                    A desktop application using Tkinter to manage daily schedules. It reads CSV data and dynamically generates schedules based on user input, with error handling for invalid entries.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Project 2 -->
-                        <div class="col-md-offset-2 col-md-8">
-                            <div class="single-timeline-box fix">
-                                <div class="row">
-                                    <div class="col-md-5">
-                                        <div class="experience-time text-right">
-                                            <h2>V-Pad</h2>
-                                            <h3 style="color: var(--secondary-accent); font-size: 1rem; margin-top: 5px;">
-                                                Python, Speech Recognition, pyttsx3
-                                            </h3>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-offset-2 col-md-5">
-                                        <div class="timeline">
-                                            <div class="timeline-content">
-                                                <h4 class="title">
-                                                    <span><i class="fa fa-circle" style="font-size: 10px; color: var(--primary-accent);"></i></span>
-                                                    Description:
-                                                </h4>
-                                                <br>
-                                                <a href="https://github.com/Shubhampandey7079/vpad_project" target="_blank"><i class="fa fa-github"></i> View on GitHub</a>
-                                                <p class="description" style="margin-top: 10px;">
-                                                    A voice-controlled text editor enabling hands-free document creation and editing. Integrates speech recognition and text-to-speech for accessibility.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Project 3 -->
-                        <div class="col-md-offset-2 col-md-8">
-                            <div class="single-timeline-box fix">
-                                <div class="row">
-                                    <div class="col-md-5">
-                                        <div class="experience-time text-right">
-                                            <h2>Weather App</h2>
-                                            <h3 style="color: var(--secondary-accent); font-size: 1rem; margin-top: 5px;">
-                                                Python, OpenWeatherMap API
-                                            </h3>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-offset-2 col-md-5">
-                                        <div class="timeline">
-                                            <div class="timeline-content">
-                                                <h4 class="title">
-                                                    <span><i class="fa fa-circle" style="font-size: 10px; color: var(--primary-accent);"></i></span>
-                                                    Description:
-                                                </h4>
-                                                <br>
-                                                <a href="#" target="_blank"><i class="fa fa-link"></i> Project Link</a>
-                                                <p class="description" style="margin-top: 10px;">
-                                                    Real-time weather application with a sleek GUI. Fetches global weather data and displays metrics with custom icons.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Portfolio / Certificates -->
-    <section id="portfolio" class="portfolio">
-        <div class="portfolio-details">
-            <div class="section-heading text-center">
-                <h2>Certificates</h2>
-            </div>
-            <div class="container">
-                <div class="portfolio-content">
-                    <div class="isotope">
-                        <div class="row">
-                            <!-- Certificate 1 -->
-                            <div class="col-sm-4">
-                                <div class="card-3d-wrap">
-                                    <div class="item">
-                                        <!-- Placeholder image for certificate -->
-                                        <img src="https://picsum.photos/seed/cert1/400/300" alt="Python Certificate">
-                                        <div class="isotope-overlay">
-                                            <a href="https://www.kaggle.com/learn/certification/shubhampandey2004/python" target="_blank">Python Certificate</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- Certificate 2 -->
-                            <div class="col-sm-4">
-                                <div class="card-3d-wrap">
-                                    <div class="item">
-                                        <img src="https://picsum.photos/seed/cert2/400/300" alt="Ethical Hacking">
-                                        <div class="isotope-overlay">
-                                            <a href="https://pwskills.com/learn/certificate/8d0e5624-6b71-4f02-a7ee-32139b9f2c37/" target="_blank">Ethical Hacking</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- Certificate 3 -->
-                            <div class="col-sm-4">
-                                <div class="card-3d-wrap">
-                                    <div class="item">
-                                        <img src="https://picsum.photos/seed/cert3/400/300" alt="Backend Dev">
-                                        <div class="isotope-overlay">
-                                            <a href="https://pwskills.com/learn/certificate/938295e5-a0e7-4424-9e37-50a89dbf6144/" target="_blank">Backend Development</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- Certificate 4 -->
-                            <div class="col-sm-4">
-                                <div class="card-3d-wrap">
-                                    <div class="item">
-                                        <img src="https://picsum.photos/seed/cert4/400/300" alt="Stock Trading">
-                                        <div class="isotope-overlay">
-                                            <a href="https://pwskills.com/learn/certificate/34cf19e0-1400-49d8-aba1-1690b8d5fe09/" target="_blank">Stock Trading</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- Certificate 5 -->
-                            <div class="col-sm-4">
-                                <div class="card-3d-wrap">
-                                    <div class="item">
-                                        <img src="https://picsum.photos/seed/cert5/400/300" alt="UI/UX Design">
-                                        <div class="isotope-overlay">
-                                            <a href="https://pwskills.com/learn/certificate/492d384d-d594-48bc-97f7-52d8c8480b0b/" target="_blank">UI/UX Design</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="stat-box">
+                    <span class="stat-num">24/7</span>
+                    <span class="stat-label">Learner</span>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Contact Section -->
-    <section id="contact" class="contact">
-        <div class="section-heading text-center">
-            <h2>Contact Me</h2>
-        </div>
-        <div class="container">
-            <div class="contact-content">
-                <div class="row">
-                    <!-- Form -->
-                    <div class="col-md-offset-1 col-md-5 col-sm-6">
-                        <div class="single-contact-box">
-                            <div class="contact-form">
-                                <div class="success-message" id="successMessage">
-                                    Thank you! Your message has been sent successfully.
-                                </div>
-                                <form id="contactForm" action="https://formsubmit.co/shubhampandey707906@gmail.com" method="POST">
-                                    <div class="row">
-                                        <div class="col-sm-6 col-xs-12">
-                                            <div class="form-group">
-                                                <input type="text" class="form-control" id="name" placeholder="Name*" name="name" required>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-6 col-xs-12">
-                                            <div class="form-group">
-                                                <input type="email" class="form-control" id="email" placeholder="Email*" name="email" required>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-sm-12">
-                                            <div class="form-group">
-                                                <input type="text" class="form-control" id="subject" placeholder="Subject" name="subject">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-sm-12">
-                                            <div class="form-group">
-                                                <textarea class="form-control" rows="8" id="comment" placeholder="Message" name="message" required></textarea>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <input type="hidden" name="_captcha" value="false">
-                                    <input type="hidden" name="_next" value="">
-                                    <div class="row">
-                                        <div class="col-sm-12">
-                                            <div class="single-contact-btn">
-                                                <button class="contact-btn" type="submit">Submit</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Info -->
-                    <div class="col-md-offset-1 col-md-5 col-sm-6">
-                        <div class="single-contact-box">
-                            <div class="contact-adress">
-                                <div class="contact-add-head">
-                                    <h3 style="color: var(--primary-accent);">Shubham Pandey</h3>
-                                    <p style="color: var(--text-muted);">Python | SQL | Data Scientist</p>
-                                </div>
-                                <div class="contact-add-info" style="margin-top: 30px;">
-                                    <div class="single-contact-add-info">
-                                        <h3>phone</h3>
-                                        <p style="color:#fff;">9304099065</p>
-                                    </div>
-                                    <div class="single-contact-add-info">
-                                        <h3>email</h3>
-                                        <p style="color:#fff;">shubhampandey707906@gmail.com</p>
-                                    </div>
-                                    <div class="single-contact-add-info">
-                                        <h3>website</h3>
-                                        <p><a href="https://shubhampandey7079.github.io/my_portfolio/" style="color:#fff;">SPANDEY.COM</a></p>
-                                    </div>
-                                </div>
-                                <div class="hm-foot-icon" style="margin-top: 30px;">
-                                    <ul>
-                                        <li><a href="https://www.facebook.com/shubhampandey007/"><i class="fa fa-facebook"></i></a></li>
-                                        <li><a href="https://github.com/Shubhampandey7079"><i class="fa fa-github"></i></a></li>
-                                        <li><a href="https://x.com/Pandey07Shubham"><i class="fa fa-twitter"></i></a></li>
-                                        <li><a href="https://www.linkedin.com/in/shubham-pandey-846a05246/"><i class="fa fa-linkedin"></i></a></li>
-                                        <li><a href="https://www.instagram.com/shubham_pandey07/"><i class="fa fa-instagram"></i></a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <section id="contact">
+        <div class="contact-card">
+            <h2 class="section-title">Ready to Collaborate?</h2>
+            <p style="color:var(--text-muted); margin-bottom:40px;">Have a project in mind? Let's build something extraordinary.</p>
+            <a href="mailto:shubhampandey707906@gmail.com" class="big-email magnetic">Start a Conversation</a>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer id="footer-copyright" class="footer-copyright">
-        <div class="container">
-            <div class="hm-footer-copyright text-center">
-                <p style="color: var(--text-muted);">
-                    &copy; copyright shubham pandey.
-                </p>
-            </div>
-        </div>
-
-        <div id="scroll-Top">
-            <div class="return-to-top">
-                <i class="fa fa-angle-up" id="scroll-top"></i>
-            </div>
+    <footer>
+        <p>&copy; 2024 Shubham Pandey. All Rights Reserved.</p>
+        <div class="socials">
+            <a href="#" class="magnetic"><i class="fab fa-github"></i></a>
+            <a href="#" class="magnetic"><i class="fab fa-linkedin"></i></a>
+            <a href="#" class="magnetic"><i class="fab fa-instagram"></i></a>
         </div>
     </footer>
 
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <!-- SCRIPTS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 
-    <!-- 3D Tilt Effect Logic -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const cards = document.querySelectorAll('.card-3d-wrap');
+        // =========================================
+        // 1. CORE INITIALIZATION
+        // =========================================
+        gsap.registerPlugin(ScrollTrigger);
+        
+        // Fade in Canvas
+        window.addEventListener('load', () => {
+            document.getElementById('canvas-container').style.opacity = '1';
+            initHeroAnimations();
+        });
 
-            cards.forEach(card => {
-                const wrapper = card.querySelector('.card-3d-wrapper');
+        // =========================================
+        // 2. CUSTOM CURSOR & MAGNETIC EFFECT
+        // =========================================
+        const cursorDot = document.querySelector('[data-cursor-dot]');
+        const cursorOutline = document.querySelector('[data-cursor-outline]');
+        const magnets = document.querySelectorAll('.magnetic');
 
-                card.addEventListener('mousemove', (e) => {
-                    const rect = card.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    
-                    // Calculate rotation based on cursor position
-                    // Center is 0
-                    const centerX = rect.width / 2;
-                    const centerY = rect.height / 2;
-                    
-                    const rotateX = ((y - centerY) / centerY) * -10; // Max rotation deg
-                    const rotateY = ((x - centerX) / centerX) * 10;
+        // Smooth Follow
+        window.addEventListener('mousemove', (e) => {
+            const posX = e.clientX;
+            const posY = e.clientY;
 
-                    wrapper.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-                });
+            // Dot instant
+            cursorDot.style.left = `${posX}px`;
+            cursorDot.style.top = `${posY}px`;
 
-                card.addEventListener('mouseleave', () => {
-                    wrapper.style.transform = `perspective(1000px) rotateX(0) rotateY(0)`;
-                });
+            // Outline lag
+            cursorOutline.animate({
+                left: `${posX}px`, top: `${posY}px`
+            }, { duration: 500, fill: "forwards" });
+
+            // Spotlight effect update for cards
+            document.querySelectorAll('.project-card').forEach(card => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty("--mouse-x", `${x}px`);
+                card.style.setProperty("--mouse-y", `${y}px`);
+            });
+        });
+
+        // Magnetic Buttons Logic
+        magnets.forEach(btn => {
+            btn.addEventListener('mousemove', (e) => {
+                document.body.classList.add('hovering');
+                const position = btn.getBoundingClientRect();
+                const x = e.clientX - position.left - position.width / 2;
+                const y = e.clientY - position.top - position.height / 2;
+                
+                // Magnetic strength
+                gsap.to(btn, { x: x * 0.3, y: y * 0.3, duration: 0.3, ease: "power2.out" });
             });
 
-            // Skill Bar Animation
-            const progressBars = document.querySelectorAll('.progress-bar');
+            btn.addEventListener('mouseleave', () => {
+                document.body.classList.remove('hovering');
+                gsap.to(btn, { x: 0, y: 0, duration: 0.5, ease: "elastic.out(1, 0.3)" });
+            });
+        });
+
+        // =========================================
+        // 3. THREE.JS LIQUID METAL SHADER
+        // =========================================
+        const initThreeJS = () => {
+            const container = document.getElementById('canvas-container');
+            const scene = new THREE.Scene();
             
-            const animateProgress = () => {
-                progressBars.forEach(bar => {
-                    const width = bar.getAttribute('data-width');
-                    bar.style.width = width;
-                });
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 3; // Move closer
+
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            // Vertex Shader: Standard with varying normals
+            const vertexShader = `
+                varying vec2 vUv;
+                varying vec3 vNormal;
+                void main() {
+                    vUv = uv;
+                    vNormal = normal;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `;
+
+            // Fragment Shader: Noise-based Liquid Chrome effect
+            const fragmentShader = `
+                uniform float uTime;
+                varying vec2 vUv;
+                varying vec3 vNormal;
+
+                // Simplex Noise Function (Simplified)
+                vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+                vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+                vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
+                vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+                float snoise(vec3 v) {
+                    const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
+                    const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+                    vec3 i  = floor(v + dot(v, C.yyy) );
+                    vec3 x0 = v - i + dot(i, C.xxx) ;
+                    vec3 g = step(x0.yzx, x0.xyz);
+                    vec3 l = 1.0 - g;
+                    vec3 i1 = min( g.xyz, l.zxy );
+                    vec3 i2 = max( g.xyz, l.zxy );
+                    vec3 x1 = x0 - i1 + C.xxx;
+                    vec3 x2 = x0 - i2 + C.yyy;
+                    vec3 x3 = x0 - D.yyy;
+                    i = mod289(i);
+                    vec4 p = permute( permute( permute(
+                                i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
+                            + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))
+                            + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+                    float n_ = 0.142857142857;
+                    vec3  ns = n_ * D.wyz - D.xzx;
+                    vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+                    vec4 x_ = floor(j * ns.z);
+                    vec4 y_ = floor(j - 7.0 * x_ );
+                    vec4 x = x_ *ns.x + ns.yyyy;
+                    vec4 y = y_ *ns.x + ns.yyyy;
+                    vec4 h = 1.0 - abs(x) - abs(y);
+                    vec4 b0 = vec4( x.xy, y.xy );
+                    vec4 b1 = vec4( x.zw, y.zw );
+                    vec4 s0 = floor(b0)*2.0 + 1.0;
+                    vec4 s1 = floor(b1)*2.0 + 1.0;
+                    vec4 sh = -step(h, vec4(0.0));
+                    vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
+                    vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+                    vec3 p0 = vec3(a0.xy,h.x);
+                    vec3 p1 = vec3(a0.zw,h.y);
+                    vec3 p2 = vec3(a1.xy,h.z);
+                    vec3 p3 = vec3(a1.zw,h.w);
+                    vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+                    p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
+                    vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+                    m = m * m;
+                    return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3) ) );
+                }
+
+                void main() {
+                    // Noise movement
+                    float noise = snoise(vec3(vNormal * 2.0 + uTime * 0.2));
+                    
+                    // Colors: Deep Purple to Bright Indigo
+                    vec3 color1 = vec3(0.1, 0.05, 0.2);
+                    vec3 color2 = vec3(0.3, 0.4, 0.9);
+                    
+                    vec3 finalColor = mix(color1, color2, noise + 0.5);
+                    
+                    // Add "rim light" feel based on normals
+                    float fresnel = pow(1.0 + dot(vNormal, vec3(0.0, 0.0, 1.0)), 3.0);
+                    finalColor += vec3(0.5, 0.5, 0.8) * fresnel * 0.5;
+
+                    gl_FragColor = vec4(finalColor, 1.0);
+                }
+            `;
+
+            // Geometry - Large Sphere
+            const geometry = new THREE.SphereGeometry(2, 64, 64);
+            
+            const material = new THREE.ShaderMaterial({
+                vertexShader,
+                fragmentShader,
+                uniforms: {
+                    uTime: { value: 0 }
+                },
+                wireframe: false
+            });
+
+            const mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh);
+
+            // Particles (Subtle Dust)
+            const particlesGeom = new THREE.BufferGeometry();
+            const particlesCount = 300; // Reduced count for performance
+            const posArray = new Float32Array(particlesCount * 3);
+            for(let i = 0; i < particlesCount * 3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 12;
+            }
+            particlesGeom.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            const particlesMat = new THREE.PointsMaterial({
+                size: 0.015, color: 0x6366f1, transparent: true, opacity: 0.4
+            });
+            const particlesMesh = new THREE.Points(particlesGeom, particlesMat);
+            scene.add(particlesMesh);
+
+            // Animation Loop
+            const clock = new THREE.Clock();
+            
+            const animate = () => {
+                requestAnimationFrame(animate);
+                const elapsedTime = clock.getElapsedTime();
+
+                material.uniforms.uTime.value = elapsedTime;
+
+                // Gentle Rotation
+                mesh.rotation.y = elapsedTime * 0.05;
+                particlesMesh.rotation.y = elapsedTime * 0.02;
+
+                renderer.render(scene, camera);
             };
 
-            // Trigger animation when skills section is in view
-            const skillsSection = document.getElementById('skills');
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        animateProgress();
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, { threshold: 0.5 });
+            animate();
 
-            observer.observe(skillsSection);
-        });
-    </script>
+            // Resize
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        };
 
-    <!-- Contact Form Script -->
-    <script>
-        document.getElementById('contactForm').addEventListener('submit', function(event) {
-            event.preventDefault();
+        initThreeJS();
+
+        // =========================================
+        // 4. GSAP ANIMATIONS & SCROLL
+        // =========================================
+        const initHeroAnimations = () => {
+            const tl = gsap.timeline();
             
-            fetch(this.action, {
-                method: 'POST',
-                body: new FormData(this),
-            })
-            .then(response => {
-                if (response.ok) {
-                    document.getElementById('successMessage').style.display = 'block';
-                    document.getElementById('contactForm').reset();
-                } else {
-                    alert('Oops! Something went wrong.');
-                }
-            })
-            .catch(error => {
-                alert('Error: ' + error.message);
+            tl.to('.hero-title', { opacity: 1, y: 0, duration: 1, ease: "power3.out" })
+              .to('.hero-desc', { opacity: 1, y: 0, duration: 1 }, "-=0.6")
+              .to('.btn', { opacity: 1, y: 0, duration: 0.8 }, "-=0.8")
+              .from('.badge', { scale: 0.8, opacity: 0, duration: 0.8 }, "-=1");
+        };
+
+        // Navbar Scroll Effect
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if(window.scrollY > 50) nav.classList.add('scrolled');
+            else nav.classList.remove('scrolled');
+        });
+
+        // Section Reveals
+        gsap.utils.toArray('section').forEach(section => {
+            if(section.classList.contains('hero')) return;
+            
+            gsap.from(section.children, {
+                scrollTrigger: {
+                    trigger: section,
+                    start: "top 85%",
+                    toggleActions: "play none none reverse"
+                },
+                y: 40,
+                opacity: 0,
+                duration: 1,
+                stagger: 0.15,
+                ease: "power3.out"
             });
         });
 
-        // Scroll to top
-        $(window).scroll(function() {
-            if ($(this).scrollTop() > 200) {
-                $('#scroll-Top').fadeIn();
-            } else {
-                $('#scroll-Top').fadeOut();
-            }
+        // Project Cards Stagger
+        gsap.from(".project-card", {
+            scrollTrigger: {
+                trigger: ".projects-grid",
+                start: "top 80%"
+            },
+            y: 50,
+            opacity: 0,
+            duration: 0.8,
+            stagger: 0.2,
+            ease: "power2.out"
         });
-        
-        $('#scroll-Top').click(function() {
-            $('html, body').animate({scrollTop: 0}, 800);
-            return false;
-        });
-    </script>
 
+    </script>
 </body>
 </html>
